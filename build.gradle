@@ -263,6 +263,7 @@ task run(type: JavaExec, dependsOn: 'build') {
     ]
 }
 task runFromClient(type: JavaExec, dependsOn: 'build') {
+    group 'battlecode'
     main = 'battlecode.server.Main'
     classpath = project.sourceSets.main.runtimeClasspath
     args = ['-c=-']
