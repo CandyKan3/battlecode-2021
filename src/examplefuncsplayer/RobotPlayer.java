@@ -36,13 +36,7 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
-        System.out.println("I'm a " + rc.getType() + " and I just got created!");
-        while (true) {
-            turnCount += 1;
-            // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
-            try {
-                // Here, we've separated the controls into a different method for each RobotType.
-                // You may rewrite this into your own control structure if you wish.
+
                 System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
                     case ENLIGHTENMENT_CENTER: runEnlightenmentCenter(); break;
@@ -54,59 +48,103 @@ public strictfp class RobotPlayer {
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
-            } catch (Exception e) {
-                System.out.println(rc.getType() + " Exception");
-                e.printStackTrace();
-            }
-        }
     }
 
     static void runEnlightenmentCenter() throws GameActionException {
-        RobotType toBuild = randomSpawnableRobotType();
-        int influence = 50;
-        for (Direction dir : directions) {
-            if (rc.canBuildRobot(toBuild, dir, influence)) {
-                rc.buildRobot(toBuild, dir, influence);
-            } else {
-                break;
+
+        int inf = 60;
+        for(int i=0; i<2; i++){
+            turnCount += 1;
+            RobotType startbuild = spawnableRobot[1];
+            for (Direction dir : directions) {
+                if (rc.canBuildRobot(startbuild, dir, inf)) {
+                    rc.buildRobot(startbuild, dir, inf);
+                } else {
+                    break;
+                }
             }
+        }
+        for(int i=0; i<4; i++){
+            inf=10;
+            turnCount += 1;
+            RobotType startbuild = spawnableRobot[2];
+            for (Direction dir : directions) {
+                if (rc.canBuildRobot(startbuild, dir, inf)) {
+                    rc.buildRobot(startbuild, dir, inf);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        //going to ramp here
+        while (true) {
+            turnCount += 1;
+            RobotType toBuild = spawnableRobot[1];
+            int influence = 100;
+            for (Direction dir : directions) {
+                if (rc.canBuildRobot(toBuild, dir, influence)) {
+                    rc.buildRobot(toBuild, dir, influence);
+                } else {
+                    break;
+                }
+            }
+            Clock.yield();
         }
     }
 
     static void runPolitician() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-            System.out.println("empowering...");
-            rc.empower(actionRadius);
-            System.out.println("empowered");
-            return;
+        while (true) {
+            turnCount += 1;
+            // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
+
+            Team enemy = rc.getTeam().opponent();
+            int actionRadius = rc.getType().actionRadiusSquared;
+            RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
+            if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
+                System.out.println("empowering...");
+                rc.empower(actionRadius);
+                System.out.println("empowered");
+                return;
+            }
+            if (tryMove(randomDirection()))
+                System.out.println("I moved!");
+            Clock.yield();
         }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+
     }
 
     static void runSlanderer() throws GameActionException {
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+        while (true) {
+            turnCount += 1;
+            // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
+            if (tryMove(randomDirection()))
+                System.out.println("I moved!");
+            Clock.yield();
+        }
     }
 
     static void runMuckraker() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
-            if (robot.type.canBeExposed()) {
-                // It's a slanderer... go get them!
-                if (rc.canExpose(robot.location)) {
-                    System.out.println("e x p o s e d");
-                    rc.expose(robot.location);
-                    return;
+        while (true) {
+            turnCount += 1;
+            // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
+
+            Team enemy = rc.getTeam().opponent();
+            int actionRadius = rc.getType().actionRadiusSquared;
+            for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
+                if (robot.type.canBeExposed()) {
+                    // It's a slanderer... go get them!
+                    if (rc.canExpose(robot.location)) {
+                        System.out.println("e x p o s e d");
+                        rc.expose(robot.location);
+                        return;
+                    }
                 }
             }
+            if (tryMove(randomDirection()))
+                System.out.println("I moved!");
+            Clock.yield();
         }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
     }
 
     /**
