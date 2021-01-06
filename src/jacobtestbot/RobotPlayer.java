@@ -2,6 +2,35 @@ package jacobtestbot;
 import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+
+class BotData {
+    public final RobotInfo center;
+    public HashSet<MapLocation> enemyCenters = new HashSet<>();
+    public HashSet<MapLocation> neutralCenters = new HashSet<>();
+
+    public BotData(RobotInfo center) {
+        this.center = center;
+    }
+
+    public void seeEnemyCenter(MapLocation loc) {
+        enemyCenters.add(loc);
+        neutralCenters.remove(loc);
+    }
+
+    public void seeNeutralCenter(MapLocation loc) {
+        neutralCenters.add(loc);
+        enemyCenters.remove(loc);
+    }
+
+    public boolean isKnownEnemyCenter(MapLocation loc) {
+        return enemyCenters.contains(loc);
+    }
+
+    public boolean isKnownNeutralCenter(MapLocation loc) {
+        return neutralCenters.contains(loc);
+    }
+}
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -66,15 +95,27 @@ public strictfp class RobotPlayer {
         }
     }
 
+    static int packLocation(MapLocation loc) {
+        return ((loc.x & 0xFF) << 8) | (loc.y & 0xFF);
+    }
+
+    static MapLocation unPackLocation(int loc) {
+        loc &= 0xFFFF;
+        MapLocation ret = rc.getLocation();
+        int dx = (loc >> 8) - (ret.x & 0xFF);
+        int dy = (loc & 0xFF) - (ret.y & 0xFF);
+        return ret.translate(dx, dy);
+    }
+
     static void runEnlightenmentCenter() throws GameActionException {
         System.out.println("NEW CENTER???!?!?!?");
-        HashMap<Integer, MapLocation> enemycenters = new HashMap<>();
-        HashMap<Integer, MapLocation> neutralcenters = new HashMap<>();
+        HashSet<MapLocation> enemyCenters = new HashSet<>();
+        HashSet<MapLocation> neutralCenters = new HashSet<>();
         ArrayList<Integer> botids = new ArrayList<>();
         while (true) {
             turnCount++;
-            System.out.println("-Start Turn-");
-            System.out.println("Influence: " + rc.getInfluence());
+            //System.out.println("-Start Turn-");
+            //System.out.println("Influence: " + rc.getInfluence());
             int influence = 20*rc.getRobotCount();
             //int influence = (((rc.getInfluence()) / 40) + 1)*20;
             if (rc.getInfluence() > influence) {
@@ -89,15 +130,49 @@ public strictfp class RobotPlayer {
                 }
             }
 
-            System.out.println("Bytecodes used: " + Clock.getBytecodeNum());
-            System.out.println("Num Bots: " + rc.getRobotCount());
+            int flag = 0;
+            for (int i = 0; i < botids.size(); i++) {
+                int botid = botids.get(i);
+                if (!rc.canGetFlag(botid)) {
+                    botids.set(i, botids.get(botids.size()-1));
+                    botids.remove(botids.size()-1);
+                    i--;
+                    continue;
+                }
+                int botflag = rc.getFlag(botid);
+                if ((botflag & 0x800000) == 0)
+                    continue;
+                if ((botflag >> 16) == 0x80) {
+                    MapLocation loc = unPackLocation(botflag);
+                    neutralCenters.remove(loc);
+                    enemyCenters.add(loc);
+                    if (flag == 0)
+                        flag = botflag & 0x7FFFFF;
+                    System.out.println("Found Enemy EC at " + loc);
+                }
+                else if ((botflag >> 16) == 0x81) {
+                    MapLocation loc = unPackLocation(botflag);
+                    enemyCenters.remove(loc);
+                    neutralCenters.add(loc);
+                    if (flag == 0)
+                        flag = botflag & 0x7FFFFF;
+                    System.out.println("Found Neutral EC at " + loc);
+                }
+            }
+            if (flag != 0) {
+                System.out.println("Transmit!");
+                rc.setFlag(flag);
+            }
+
+
+            //System.out.println("Bytecodes used: " + Clock.getBytecodeNum());
+            //System.out.println("Num Bots: " + rc.getRobotCount());
             Clock.yield();
         }
     }
 
-    static void runPolitician(RobotInfo center) throws GameActionException {
-        System.out.println(center);
-        if (center == null) {
+    static void runPolitician(BotData data) throws GameActionException {
+        if (data == null) {
             for (Direction dir : directions) {
                 MapLocation adj = rc.adjacentLocation(dir);
                 if (!rc.canSenseLocation(adj))
@@ -106,23 +181,54 @@ public strictfp class RobotPlayer {
                 if (robot == null)
                     continue;
                 if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
-                    center = robot;
+                    data = new BotData(robot);
                     break;
                 }
             }
         }
-        if (center == null) {
+        if (data == null) {
             System.out.println("No center near on spawn?");
             return;
         }
-        while (center == null) {
-            if (rc.canEmpower(3))
-                rc.empower(3);
-            Clock.yield();
-        }
+
+        Team me = rc.getTeam();
+        Team enemy = me.opponent();
         while (true) {
-            if (!tryMoveToward(center.location) && rc.canEmpower(3)) {
+            if (!tryMoveToward(data.center.location) && rc.canEmpower(3)) {
                 rc.empower(3);
+            }
+
+            int centerflag = rc.getFlag(data.center.ID);
+            if (centerflag != 0 && (centerflag & 0x800000) == 0) {
+                if ((centerflag >> 16) == 0x00) {
+                    MapLocation loc = unPackLocation(centerflag);
+                    data.seeEnemyCenter(loc);
+                }
+                else if ((centerflag >> 16) == 0x01) {
+                    MapLocation loc = unPackLocation(centerflag);
+                    data.seeNeutralCenter(loc);
+                }
+            }
+
+            for (RobotInfo robot : rc.senseNearbyRobots()) {
+                if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
+                    if (robot.team == me)
+                        continue;
+                    if (robot.team == enemy && data.isKnownEnemyCenter(robot.location))
+                        continue;
+                    if (robot.team == Team.NEUTRAL && data.isKnownNeutralCenter(robot.location))
+                        continue;
+
+                    int flag = 0x800000 | packLocation(robot.location);
+                    if (robot.team != enemy) {
+                        flag |= 0x010000;
+                        data.seeNeutralCenter(robot.location);
+                    } else {
+                        data.seeEnemyCenter(robot.location);
+                    }
+                    rc.setFlag(flag);
+                    break;
+                }
             }
 
             Clock.yield();
@@ -130,7 +236,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runSlanderer() throws GameActionException {
-        RobotInfo center = null;
+        BotData data = null;
         Team myteam = rc.getTeam();
         int id = rc.getID();
         for (Direction dir : directions) {
@@ -139,20 +245,61 @@ public strictfp class RobotPlayer {
             if (robot == null)
                 continue;
             if (robot.type == RobotType.ENLIGHTENMENT_CENTER && robot.team == myteam) {
-                center = robot;
+                data = new BotData(robot);
                 break;
             }
         }
-        if (center == null) {
+        if (data == null) {
             System.out.println("No center near on spawn?");
         }
+
+        Team me = rc.getTeam();
+        Team enemy = me.opponent();
+        MapLocation attackCenter = null;
         while (true) {
             if (rc.getType() == RobotType.POLITICIAN) {
-                System.out.println(id == rc.getID());
-                runPolitician(center);
+                runPolitician(data);
                 continue;
             }
-            tryMove(randomDirection());
+
+            int centerflag = rc.getFlag(data.center.ID);
+            if (centerflag != 0 && (centerflag & 0x800000) == 0) {
+                if ((centerflag >> 16) == 0x00) {
+                    MapLocation loc = unPackLocation(centerflag);
+                    attackCenter = loc;
+                    data.seeEnemyCenter(loc);
+                }
+                else if ((centerflag >> 16) == 0x01) {
+                    MapLocation loc = unPackLocation(centerflag);
+                    data.seeNeutralCenter(loc);
+                }
+            }
+
+            for (RobotInfo robot : rc.senseNearbyRobots()) {
+                if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
+                    if (robot.team == me)
+                        continue;
+                    if (robot.team == enemy && data.isKnownEnemyCenter(robot.location))
+                        continue;
+                    if (robot.team == Team.NEUTRAL && data.isKnownNeutralCenter(robot.location))
+                        continue;
+
+                    int flag = 0x800000 | packLocation(robot.location);
+                    if (robot.team != enemy) {
+                        flag |= 0x010000;
+                        data.seeNeutralCenter(robot.location);
+                    } else {
+                        data.seeEnemyCenter(robot.location);
+                    }
+                    rc.setFlag(flag);
+                    break;
+                }
+            }
+
+            if (attackCenter != null) {
+                tryMoveToward(attackCenter);
+            } else
+                tryMove(randomDirection());
 
             Clock.yield();
         }
@@ -210,58 +357,37 @@ public strictfp class RobotPlayer {
         }
         if (slope < 0)
             slope *= -1;
+        Direction p, s;
         if (slope > 0.57735 && slope < 1.73205) {
-            if (rc.canMove(diagonal)) {
-                rc.move(diagonal);
-                return true;
-            }
-            if (slope <= 1) {
-                if (rc.canMove(sidetoside)) {
-                    rc.move(sidetoside);
-                    return true;
-                }
-                if (rc.canMove(upanddown)) {
-                    rc.move(upanddown);
-                    return true;
-                }
-            } else {
-                if (rc.canMove(upanddown)) {
-                    rc.move(upanddown);
-                    return true;
-                }
-                if (rc.canMove(sidetoside)) {
-                    rc.move(sidetoside);
-                    return true;
-                }
-            }
+            p = diagonal;
+            if (slope <= 1)
+                s = sidetoside;
+            else
+                s = upanddown;
         }
         else if (slope <= 0.57735) {
-            if (rc.canMove(sidetoside)) {
-                rc.move(sidetoside);
-                return true;
-            }
-            if (rc.canMove(diagonal)) {
-                rc.move(diagonal);
-                return true;
-            }
-            if (rc.canMove(upanddown)) {
-                rc.move(upanddown);
-                return true;
-            }
+            p = sidetoside;
+            s = diagonal;
         }
         else {
-            if (rc.canMove(upanddown)) {
-                rc.move(upanddown);
+            p = upanddown;
+            s = diagonal;
+        }
+        boolean pRotateLeft = true;
+        if (p.rotateLeft().equals(s))
+            pRotateLeft = false;
+        for (int i = 0; i < 5; i++) {
+            if (rc.canMove(p)) {
+                rc.move(p);
                 return true;
             }
-            if (rc.canMove(diagonal)) {
-                rc.move(diagonal);
-                return true;
-            }
-            if (rc.canMove(sidetoside)) {
-                rc.move(sidetoside);
-                return true;
-            }
+            Direction temp;
+            if (pRotateLeft)
+                temp = p.rotateLeft();
+            else
+                temp = p.rotateRight();
+            p = s;
+            s = temp;
         }
         return false;
     }
