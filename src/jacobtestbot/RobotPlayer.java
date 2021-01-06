@@ -358,14 +358,14 @@ public strictfp class RobotPlayer {
         if (slope < 0)
             slope *= -1;
         Direction p, s;
-        if (slope > 0.57735 && slope < 1.73205) {
+        if (slope > 0.414214 && slope < 2.414214) {
             p = diagonal;
             if (slope <= 1)
                 s = sidetoside;
             else
                 s = upanddown;
         }
-        else if (slope <= 0.57735) {
+        else if (slope <= 0.414214) {
             p = sidetoside;
             s = diagonal;
         }
