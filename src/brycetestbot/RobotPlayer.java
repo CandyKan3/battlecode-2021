@@ -113,6 +113,7 @@ public strictfp class RobotPlayer {
         HashSet<MapLocation> enemyCenters = new HashSet<>();
         HashSet<MapLocation> neutralCenters = new HashSet<>();
         ArrayList<Integer> botids = new ArrayList<>();
+        ArrayList<Integer> muckrakerids = new ArrayList<>();
         while (true) {
             turnCount++;
             //System.out.println("-Start Turn-");
@@ -127,6 +128,22 @@ public strictfp class RobotPlayer {
                         RobotInfo robot = rc.senseRobotAtLocation(buildloc);
                         botids.add(robot.ID);
                         break;
+                    }
+                }
+            }
+            else if(rc.getInfluence()>30&&muckrakerids.size()<10){
+                //going to spawn 10 muckrakers every so often
+                int influencemuck = 10;
+                for(int i=0; i<10; i++){
+                    for (Direction dir : directions) {
+                        if (rc.canBuildRobot(RobotType.MUCKRAKER, dir, influencemuck)) {
+                            rc.buildRobot(RobotType.MUCKRAKER, dir, influencemuck);
+                            MapLocation buildloc = rc.adjacentLocation(dir);
+                            RobotInfo robot = rc.senseRobotAtLocation(buildloc);
+                            muckrakerids.add(robot.ID);
+                            botids.add(robot.ID);
+                            break;
+                        }
                     }
                 }
             }
