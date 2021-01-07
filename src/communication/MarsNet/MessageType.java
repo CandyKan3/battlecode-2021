@@ -9,6 +9,7 @@ public enum MessageType {
     FoundNeutralEC(ComType.OTHER, DataType.LOCATION),
     FoundFriendlyEC(ComType.OTHER, DataType.LOCATION),
     S_Zerg(ComType.BOT, DataType.LOCATION),
+    Pre_Zerg(ComType.BOT, DataType.LOCATION),
     P_Zerg(ComType.BOT, DataType.LOCATION),
     M_Zerg(ComType.BOT, DataType.LOCATION),
     A_Zerg(ComType.BOT, DataType.LOCATION)
