@@ -37,27 +37,30 @@ public boolean prepping= false;
         });
 
         MapLocation toAttack = enemyEC.peek();
-        if(toAttack==null)
+        if(toAttack==null){
             return;
-        //going to rally the troops here
+        }
 
+        //going to rally the troops here
+        //System.out.println("Preparing to zerg...");
         //calculating the midpoint between the target location and the ECCenter
         MapLocation curr = this.getLocation();
         int x = (curr.x + toAttack.x)/2;
         int y = (curr.y + toAttack.y)/2;
         MapLocation loc = new MapLocation(x,y);
-        prepping = true;
-        if(prepping){
+        //System.out.println("Broadcasting "+ loc.x + " " + loc.y);
+
+        if(turncount<100){
             MarsNet.broadcastLocation(MessageType.Pre_Zerg, loc);
             turncount++;
 
         }
 
-        if (toAttack != null&&turncount>=1000){
-            System.out.println("ZERGING BABY" + getRoundNum());
+        if (toAttack != null&&turncount>=100){
+           // System.out.println("ZERGING BABY" + getRoundNum());
             MarsNet.broadcastLocation(MessageType.S_Zerg, toAttack);
-            turncount =0;
-            prepping = false;
+
+
         }
 
     }
