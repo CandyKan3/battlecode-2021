@@ -1,7 +1,8 @@
 package jacobtestbot;
 import battlecode.common.*;
+import communication.MarsNet.*;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 class BotData {
@@ -41,6 +42,8 @@ public strictfp class RobotPlayer {
             RobotType.MUCKRAKER,
     };
 
+    static final RobotType BOT = RobotType.POLITICIAN;
+
     static final Direction[] directions = {
             Direction.NORTH,
             Direction.NORTHEAST,
@@ -64,6 +67,7 @@ public strictfp class RobotPlayer {
         // This is the RobotController object. You use it to perform actions from this robot,
         // and to get information on its current status.
         RobotPlayer.rc = rc;
+        MarsNet.setRC(rc);
 
         turnCount = 0;
 
@@ -95,18 +99,6 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static int packLocation(MapLocation loc) {
-        return ((loc.x & 0xFF) << 8) | (loc.y & 0xFF);
-    }
-
-    static MapLocation unPackLocation(int loc) {
-        loc &= 0xFFFF;
-        MapLocation ret = rc.getLocation();
-        int dx = (loc >> 8) - (ret.x & 0xFF);
-        int dy = (loc & 0xFF) - (ret.y & 0xFF);
-        return ret.translate(dx, dy);
-    }
-
     static void runEnlightenmentCenter() throws GameActionException {
         System.out.println("NEW CENTER???!?!?!?");
         HashSet<MapLocation> enemyCenters = new HashSet<>();
@@ -118,6 +110,7 @@ public strictfp class RobotPlayer {
             //System.out.println("Influence: " + rc.getInfluence());
             int influence = 20*rc.getRobotCount();
             //int influence = (((rc.getInfluence()) / 40) + 1)*20;
+            if (turnCount > 600) rc.resign();
             if (rc.getInfluence() > influence) {
                 for (Direction dir : directions) {
                     if (rc.canBuildRobot(RobotType.SLANDERER, dir, influence)) {
@@ -130,7 +123,7 @@ public strictfp class RobotPlayer {
                 }
             }
 
-            int flag = 0;
+            Packet toSend = new Packet();
             for (int i = 0; i < botids.size(); i++) {
                 int botid = botids.get(i);
                 if (!rc.canGetFlag(botid)) {
@@ -139,30 +132,27 @@ public strictfp class RobotPlayer {
                     i--;
                     continue;
                 }
-                int botflag = rc.getFlag(botid);
-                if ((botflag & 0x800000) == 0)
-                    continue;
-                if ((botflag >> 16) == 0x80) {
-                    MapLocation loc = unPackLocation(botflag);
-                    neutralCenters.remove(loc);
-                    enemyCenters.add(loc);
-                    if (flag == 0)
-                        flag = botflag & 0x7FFFFF;
-                    System.out.println("Found Enemy EC at " + loc);
-                }
-                else if ((botflag >> 16) == 0x81) {
-                    MapLocation loc = unPackLocation(botflag);
-                    enemyCenters.remove(loc);
-                    neutralCenters.add(loc);
-                    if (flag == 0)
-                        flag = botflag & 0x7FFFFF;
-                    System.out.println("Found Neutral EC at " + loc);
-                }
+                MarsNet.getAndHandle(botid, ComType.BOT, (p) -> {
+                    MapLocation loc;
+                    switch (p.mType) {
+                        case FoundEnemyEC:
+                            loc = p.asLocation();
+                            neutralCenters.remove(loc);
+                            enemyCenters.add(loc);
+                            if (!toSend.isSet())
+                                toSend.setLocation(MessageType.S_Zerg, loc);
+                            break;
+                        case FoundNeutralEC:
+                            loc = p.asLocation();
+                            enemyCenters.remove(loc);
+                            neutralCenters.add(loc);
+                            break;
+                    }
+                    return null;
+                });
             }
-            if (flag != 0) {
-                System.out.println("Transmit!");
-                rc.setFlag(flag);
-            }
+            if (toSend.isSet())
+                MarsNet.broadcast(toSend);
 
 
             //System.out.println("Bytecodes used: " + Clock.getBytecodeNum());
@@ -171,8 +161,8 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static void runPolitician(BotData data) throws GameActionException {
-        if (data == null) {
+    static void runPolitician(BotData indata) throws GameActionException {
+        if (indata == null) {
             for (Direction dir : directions) {
                 MapLocation adj = rc.adjacentLocation(dir);
                 if (!rc.canSenseLocation(adj))
@@ -181,15 +171,16 @@ public strictfp class RobotPlayer {
                 if (robot == null)
                     continue;
                 if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
-                    data = new BotData(robot);
+                    indata = new BotData(robot);
                     break;
                 }
             }
         }
-        if (data == null) {
+        if (indata == null) {
             System.out.println("No center near on spawn?");
             return;
         }
+        final BotData data = indata;
 
         Team me = rc.getTeam();
         Team enemy = me.opponent();
@@ -198,35 +189,15 @@ public strictfp class RobotPlayer {
                 rc.empower(3);
             }
 
-            int centerflag = rc.getFlag(data.center.ID);
-            if (centerflag != 0 && (centerflag & 0x800000) == 0) {
-                if ((centerflag >> 16) == 0x00) {
-                    MapLocation loc = unPackLocation(centerflag);
-                    data.seeEnemyCenter(loc);
-                }
-                else if ((centerflag >> 16) == 0x01) {
-                    MapLocation loc = unPackLocation(centerflag);
-                    data.seeNeutralCenter(loc);
-                }
-            }
-
             for (RobotInfo robot : rc.senseNearbyRobots()) {
                 if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
                     if (robot.team == me)
                         continue;
-                    if (robot.team == enemy && data.isKnownEnemyCenter(robot.location))
-                        continue;
-                    if (robot.team == Team.NEUTRAL && data.isKnownNeutralCenter(robot.location))
-                        continue;
 
-                    int flag = 0x800000 | packLocation(robot.location);
-                    if (robot.team != enemy) {
-                        flag |= 0x010000;
-                        data.seeNeutralCenter(robot.location);
-                    } else {
-                        data.seeEnemyCenter(robot.location);
-                    }
-                    rc.setFlag(flag);
+                    MessageType mt = MessageType.FoundEnemyEC;
+                    if (robot.team != enemy)
+                        mt = MessageType.FoundNeutralEC;
+                    MarsNet.broadcastLocation(mt, robot.location);
                     break;
                 }
             }
@@ -236,22 +207,26 @@ public strictfp class RobotPlayer {
     }
 
     static void runSlanderer() throws GameActionException {
-        BotData data = null;
+        BotData indata = null;
         Team myteam = rc.getTeam();
         int id = rc.getID();
         for (Direction dir : directions) {
             MapLocation adj = rc.adjacentLocation(dir);
+            if (!rc.canSenseLocation(adj))
+                continue;
             RobotInfo robot = rc.senseRobotAtLocation(adj);
             if (robot == null)
                 continue;
             if (robot.type == RobotType.ENLIGHTENMENT_CENTER && robot.team == myteam) {
-                data = new BotData(robot);
+                indata = new BotData(robot);
                 break;
             }
         }
-        if (data == null) {
+        if (indata == null) {
             System.out.println("No center near on spawn?");
+            return;
         }
+        final BotData data = indata;
 
         Team me = rc.getTeam();
         Team enemy = me.opponent();
@@ -262,36 +237,26 @@ public strictfp class RobotPlayer {
                 continue;
             }
 
-            int centerflag = rc.getFlag(data.center.ID);
-            if (centerflag != 0 && (centerflag & 0x800000) == 0) {
-                if ((centerflag >> 16) == 0x00) {
-                    MapLocation loc = unPackLocation(centerflag);
-                    attackCenter = loc;
-                    data.seeEnemyCenter(loc);
+            MapLocation foundLoc = MarsNet.getAndHandle(data.center.ID, ComType.EC, (p) -> {
+                MapLocation loc;
+                if (p.mType == MessageType.S_Zerg) {
+                    loc = p.asLocation();
+                    return loc;
                 }
-                else if ((centerflag >> 16) == 0x01) {
-                    MapLocation loc = unPackLocation(centerflag);
-                    data.seeNeutralCenter(loc);
-                }
-            }
+                return null;
+            });
+            if (attackCenter == null)
+                attackCenter = foundLoc;
 
             for (RobotInfo robot : rc.senseNearbyRobots()) {
                 if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
                     if (robot.team == me)
                         continue;
-                    if (robot.team == enemy && data.isKnownEnemyCenter(robot.location))
-                        continue;
-                    if (robot.team == Team.NEUTRAL && data.isKnownNeutralCenter(robot.location))
-                        continue;
 
-                    int flag = 0x800000 | packLocation(robot.location);
-                    if (robot.team != enemy) {
-                        flag |= 0x010000;
-                        data.seeNeutralCenter(robot.location);
-                    } else {
-                        data.seeEnemyCenter(robot.location);
-                    }
-                    rc.setFlag(flag);
+                    MessageType mt = MessageType.FoundEnemyEC;
+                    if (robot.team != enemy)
+                        mt = MessageType.FoundNeutralEC;
+                    MarsNet.broadcastLocation(mt, robot.location);
                     break;
                 }
             }
