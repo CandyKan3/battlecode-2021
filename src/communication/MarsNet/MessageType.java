@@ -12,7 +12,8 @@ public enum MessageType {
     Pre_Zerg(ComType.BOT, DataType.LOCATION),
     P_Zerg(ComType.BOT, DataType.LOCATION),
     M_Zerg(ComType.BOT, DataType.LOCATION),
-    A_Zerg(ComType.BOT, DataType.LOCATION)
+    A_Zerg(ComType.BOT, DataType.LOCATION),
+    M_Search(ComType.BOT, DataType.LOCATION)
     ; // Leave this here
 
     public final ComType dst;

@@ -1,7 +1,6 @@
 package util;
 
 
-
 public class PriorityElement<T> implements Comparable<PriorityElement<T>> {
     private final Integer priority;
     private final T element;

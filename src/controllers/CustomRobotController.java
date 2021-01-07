@@ -6,6 +6,8 @@ import battlecode.common.*;
 public strictfp abstract class CustomRobotController implements IBotController {
     private static RobotController rc;
 
+    public int turn = 0;
+
     public static void setRC(RobotController rc) {
         CustomRobotController.rc = rc;
     }
@@ -17,6 +19,7 @@ public strictfp abstract class CustomRobotController implements IBotController {
     public void run() throws GameActionException {
         while (true) {
             doTurn();
+            turn++;
             Clock.yield();
         }
     }
