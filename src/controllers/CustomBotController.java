@@ -1,13 +1,11 @@
 package controllers;
 
 import battlecode.common.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
 // Contains useful functions and data for non-EC bots
 public strictfp abstract class CustomBotController extends CustomRobotController {
-    @NotNull
     public final RobotInfo EC;
 
     public CustomBotController() {

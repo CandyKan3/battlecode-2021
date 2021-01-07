@@ -1,6 +1,5 @@
 package util;
 
-import org.jetbrains.annotations.NotNull;
 
 public class PriorityElement<T> implements Comparable<PriorityElement<T>> {
     private final Integer priority;
@@ -16,7 +15,7 @@ public class PriorityElement<T> implements Comparable<PriorityElement<T>> {
     }
 
     @Override
-    public int compareTo(@NotNull PriorityElement<T> other) {
+    public int compareTo(PriorityElement<T> other) {
         return this.priority.compareTo(other.priority);
     }
 }
