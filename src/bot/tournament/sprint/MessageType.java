@@ -1,4 +1,4 @@
-package skirmishbot;
+package bot.tournament.sprint;
 
 import communication.MarsNet.DataType;
 import communication.MarsNet.Filters.BotType;
@@ -14,7 +14,6 @@ public enum MessageType implements IGetDataType, IGetDestination {
     FoundNeutralEC(BotType.ALL, DataType.LOCATION),
     S_Zerg(BotType.UNIT, DataType.LOCATION),
     M_Zerg(BotType.UNIT, DataType.LOCATION),
-
     ; // Leave this here
 
     public final BotType dest;

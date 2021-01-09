@@ -1,4 +1,4 @@
-package skirmishbot;
+package bot.tournament.sprint;
 
 import battlecode.common.*;
 import communication.MarsNet.Filters.DestinationFilter;
@@ -9,13 +9,14 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
     public MuckrakerController(MarsNet<MessageType> marsNet) {
         super(marsNet);
     }
-    public MapLocation pushGoal = null;
+    public MapLocation initialGoal = null;
 
     @Override
     public void doTurn() throws GameActionException {
 
-        // Find pushGoal (where we want to move to)
+        // Find initialGoal (where we want to move to)
         MapLocation foundLoc = marsNet.getAndHandleF(EC.ID, DestinationFilter::Muckraker, (p) -> p.asLocation());
+        if (foundLoc != null && initialGoal == null) initialGoal = foundLoc;
 
         Team enemy = getTeam().opponent();
         int actionRadius = getType().actionRadiusSquared;
@@ -40,8 +41,8 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
             }
         }
 
-        if (pushGoal != null) {
-            if (tryMoveToward(pushGoal)) {
+        if (initialGoal != null) {
+            if (tryMoveToward(initialGoal)) {
                 // TODO: Figure out if you are in a corner then get coords
                 System.out.println("x " + getLocation().x + " y " + getLocation().y);
             };
