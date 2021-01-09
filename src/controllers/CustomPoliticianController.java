@@ -1,10 +1,15 @@
 package controllers;
 
-public strictfp abstract class CustomPoliticianController extends CustomBotController {
+import communication.MarsNet.IGetDataType;
+import communication.MarsNet.MarsNet;
 
-    public CustomPoliticianController() { }
+public strictfp abstract class CustomPoliticianController<E extends Enum<E> & IGetDataType> extends CustomUnitController<E> {
 
-    public CustomPoliticianController(CustomBotController cbc) {
+    public CustomPoliticianController(MarsNet<E> marsNet) {
+        super(marsNet);
+    }
+
+    public CustomPoliticianController(CustomUnitController<E> cbc) {
         super(cbc);
     }
 }

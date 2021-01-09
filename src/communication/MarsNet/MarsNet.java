@@ -1,86 +1,97 @@
 package communication.MarsNet;
 
 import battlecode.common.*;
+import communication.HeaderProtocol.HeaderProtocol;
 
-public strictfp class MarsNet {
-    static RobotController rc;
+public strictfp class MarsNet<E extends Enum<E> & IGetDataType> {
+    public static RobotController rc;
 
     public static void setRC(RobotController rc) {
         MarsNet.rc = rc;
     }
 
-    public static boolean broadcastRaw(MessageType mType, short data) {
+    private final HeaderProtocol<E> hp;
+
+    /*
+    Can't use getEnumConstants()...
+    public MarsNet(Class<E> messageTypeEnum) {
+        this.hp = new HeaderProtocol<>(messageTypeEnum, 24);
+
+    }
+    */
+
+    public MarsNet(E[] enumValues) {
+        this.hp = new HeaderProtocol<>(enumValues, 24);
+    }
+
+    public MarsNet(byte[] data, E[] enumValues) {
+        this.hp = HeaderProtocol.deSerialize(data, enumValues);
+    }
+
+    public byte[] serializedHeaderProtocol() {
+        return this.hp.serialize();
+    }
+
+    public boolean broadcastRaw(E mType, int data) {
         try {
-            rc.setFlag(mType.getHeader(rc.getType()) | data);
+            rc.setFlag(hp.getHeader(mType) | (data & hp.getDataMask(mType)));
         } catch (GameActionException ignored) { }
         return true;
     }
 
-    public static boolean broadcastLocation(MessageType mType, MapLocation loc) {
-        if (mType.dType != DataType.LOCATION)
+    public boolean broadcastLocation(E mType, MapLocation loc) {
+        if (mType.getDataType() != DataType.LOCATION)
             return false;
-        return broadcastRaw(mType, Packet.packLocation(loc));
+        return broadcastRaw(mType, DataType.LOCATION.pack(loc));
     }
 
-    public static boolean broadcastID(MessageType mType, int id) {
-        if (mType.dType != DataType.ID)
+    public boolean broadcastID(E mType, int id) {
+        if (mType.getDataType() != DataType.ID)
             return false;
-        return broadcastRaw(mType, Packet.packID(id));
+        return broadcastRaw(mType, DataType.ID.pack(id));
     }
 
-    public static boolean broadcast(Packet p) {
+    public boolean broadcast(Packet<E> p) {
         return broadcastRaw(p.mType, p.asRaw());
     }
 
-    private static Packet getPacket(int botID, ComType srcCType) throws GameActionException {
+    private Packet<E> getPacket(int botID) throws GameActionException {
         int flag = rc.getFlag(botID);
-        MessageType mType = MessageType.values()[flag >> 16 & 0x7F];
-        makePacket: {
-            if (mType == MessageType.NONE)
-                break makePacket;
-            switch (mType.dst) {
-                case NONE:
-                    break makePacket;
-                case EC:
-                    if (rc.getType() != RobotType.ENLIGHTENMENT_CENTER)
-                        break makePacket;
-                    break;
-                case BOT:
-                    if (rc.getType() == RobotType.ENLIGHTENMENT_CENTER)
-                        break makePacket;
-                    break;
-                case OTHER:
-                    RobotType dstRType = rc.getType();
-                    if (dstRType == srcCType.getRType(dstRType))
-                        break makePacket;
-                    break;
-                case ALL:
-                    break;
-            }
-            return new Packet(mType, (short) flag);
-        }
-        return null;
+        E mType = hp.getType(flag);
+        return new Packet<>(mType, flag & hp.getDataMask(mType));
     }
 
-    public static Packet getPacketSafe(int botID, ComType srcCType) {
+    public Packet<E> getPacketSafe(int botID) {
         try {
             if (rc.canGetFlag(botID))
-                return getPacket(botID, srcCType);
+                return getPacket(botID);
         } catch (GameActionException ignore) { }
         return null;
     }
 
-    public static <T> T getAndHandle(int botID, ComType srcCType, PacketHandler<T> handler) throws GameActionException {
-        Packet p = getPacket(botID, srcCType);
-        if (p == null || p.mType == MessageType.NONE)
+    public <T> T getAndHandle(int botID, PacketHandler<T,E> handler) throws GameActionException {
+        Packet<E> p = getPacket(botID);
+        return handler.handle(p);
+    }
+
+    public <T> T getAndHandleF(int botID, Filter<E> filter, PacketHandler<T,E> handler) throws GameActionException {
+        Packet<E> p = getPacket(botID);
+        if (filter.isAllowed(p.mType))
+            return handler.handle(p);
+        return null;
+    }
+
+    public <T> T getAndHandleSafe(int botID, PacketHandler<T,E> handler) {
+        Packet<E> p = getPacketSafe(botID);
+        if (p == null)
             return null;
         return handler.handle(p);
     }
 
-    public static <T> T getAndHandleSafe(int botID, ComType srcCType, PacketHandler<T> handler) {
-        Packet p = getPacketSafe(botID, srcCType);
-        if (p == null || p.mType == MessageType.NONE)
-            return null;
-        return handler.handle(p);
+    public <T> T getAndHandleSafeF(int botID, Filter<E> filter, PacketHandler<T,E> handler) {
+        Packet<E> p = getPacketSafe(botID);
+        if (filter.isAllowed(p.mType))
+            return handler.handle(p);
+        return null;
     }
 }

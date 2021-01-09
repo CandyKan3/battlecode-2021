@@ -1,11 +1,14 @@
-package jacobtestbot2;
+package jacobtestbot3;
 
 import battlecode.common.*;
 import communication.MarsNet.MarsNet;
-import communication.MarsNet.MessageType;
 import controllers.CustomECController;
 
-public class ECController extends CustomECController {
+public class ECController extends CustomECController<MessageType> {
+
+    public ECController(MarsNet<MessageType> marsNet) {
+        super(marsNet);
+    }
 
     @Override
     public void doTurn() throws GameActionException {
@@ -37,6 +40,6 @@ public class ECController extends CustomECController {
 
         MapLocation toAttack = enemyEC.peek();
         if (toAttack != null)
-            MarsNet.broadcastLocation(MessageType.S_Zerg, toAttack);
+            marsNet.broadcastLocation(MessageType.S_Zerg, toAttack);
     }
 }

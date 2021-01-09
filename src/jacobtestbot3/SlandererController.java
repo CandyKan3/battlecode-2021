@@ -1,17 +1,17 @@
-package jacobtestbot2;
+package jacobtestbot3;
 
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
-import communication.MarsNet.ComType;
+import battlecode.common.*;
+import communication.MarsNet.Filters.DestinationFilter;
 import communication.MarsNet.MarsNet;
-import communication.MarsNet.MessageType;
 import controllers.CustomRobotController;
 import controllers.CustomSlandererController;
 
-public class SlandererController extends CustomSlandererController {
-    public MapLocation attackCenter = null;
+public class SlandererController extends CustomSlandererController<MessageType> {
+    public MapLocation attackCenter;
+
+    public SlandererController(MarsNet<MessageType> marsNet) {
+        super(marsNet);
+    }
 
     // This cannot be moved into CustomSlandererController, because it depends
     // on your actual implementation of PoliticianController, which is not
@@ -20,7 +20,7 @@ public class SlandererController extends CustomSlandererController {
         if (getType() == RobotType.POLITICIAN) {
             // This below can be changed if you want to have a different
             // PoliticianController for converted Slanderers
-            CustomRobotController crc = new PoliticianController(this);
+            CustomRobotController<MessageType> crc = new PoliticianController(this);
             crc.runSafe();
         }
     }
@@ -29,7 +29,7 @@ public class SlandererController extends CustomSlandererController {
     public void doTurn() throws GameActionException {
         transform(); // Leave this here
 
-        MapLocation foundLoc = MarsNet.getAndHandle(EC.ID, ComType.EC, (p) -> {
+        MapLocation foundLoc = marsNet.getAndHandleF(EC.ID, DestinationFilter::Slanderer, (p) -> {
             if (p.mType == MessageType.S_Zerg) {
                 return p.asLocation();
             }
@@ -46,7 +46,7 @@ public class SlandererController extends CustomSlandererController {
                 MessageType mt = MessageType.FoundEnemyEC;
                 if (robot.team != getTeam().opponent())
                     mt = MessageType.FoundNeutralEC;
-                MarsNet.broadcastLocation(mt, robot.location);
+                marsNet.broadcastLocation(mt, robot.location);
                 break;
             }
         }

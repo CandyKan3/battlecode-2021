@@ -1,16 +1,13 @@
-package jacobtestbot2;
+package jacobtestbot3;
 
-import battlecode.common.GameActionException;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 import communication.MarsNet.MarsNet;
-import communication.MarsNet.MessageType;
 import controllers.CustomPoliticianController;
 
-public class PoliticianController extends CustomPoliticianController {
+public class PoliticianController extends CustomPoliticianController<MessageType> {
 
-    public PoliticianController() {
-
+    public PoliticianController(MarsNet<MessageType> marsNet) {
+        super(marsNet);
     }
 
     // This cannot be moved into CustomPoliticianController, because it depends
@@ -33,7 +30,7 @@ public class PoliticianController extends CustomPoliticianController {
                 MessageType mt = MessageType.FoundEnemyEC;
                 if (robot.team != getTeam().opponent())
                     mt = MessageType.FoundNeutralEC;
-                MarsNet.broadcastLocation(mt, robot.location);
+                marsNet.broadcastLocation(mt, robot.location);
                 break;
             }
         }

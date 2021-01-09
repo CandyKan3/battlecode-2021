@@ -1,10 +1,13 @@
 package controllers;
 
 import battlecode.common.*;
+import communication.MarsNet.IGetDataType;
+import communication.MarsNet.MarsNet;
 
 // Contains useful functions and data for all bots
-public strictfp abstract class CustomRobotController implements IBotController {
+public strictfp abstract class CustomRobotController<E extends Enum<E> & IGetDataType> implements IBotController {
     private static RobotController rc;
+    protected MarsNet<E> marsNet;
 
     public int turn = 0;
 
@@ -12,9 +15,13 @@ public strictfp abstract class CustomRobotController implements IBotController {
         CustomRobotController.rc = rc;
     }
 
-    public CustomRobotController() { }
+    public CustomRobotController(MarsNet<E> marsNet) {
+        this.marsNet = marsNet;
+    }
 
-    public CustomRobotController(CustomRobotController crc) {}
+    public CustomRobotController(CustomRobotController<E> crc) {
+        this.marsNet = crc.marsNet;
+    }
 
     public void run() throws GameActionException {
         while (true) {

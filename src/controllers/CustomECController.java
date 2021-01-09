@@ -2,21 +2,22 @@ package controllers;
 
 import battlecode.common.*;
 import communication.MarsNet.*;
+import communication.MarsNet.Filters.DestinationFilter;
 import util.PriorityElement;
 
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 
 // Contains useful functions and data for all ECs
-public strictfp abstract class CustomECController extends CustomRobotController {
+public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataType> extends CustomRobotController<E> {
     public final PriorityQueue<Integer> friendlyEC = new PriorityQueue<>();
     public final PriorityQueue<MapLocation> enemyEC = new PriorityQueue<>();
     public final PriorityQueue<MapLocation> neutralEC = new PriorityQueue<>();
-    public final PriorityQueue<PriorityElement<Packet>> messageQueue = new PriorityQueue<>();
     public final ArrayList<Integer> botIDs = new ArrayList<>();
     public final int ECID = getID();
 
-    public CustomECController() {
+    public CustomECController(MarsNet<E> marsNet) {
+        super(marsNet);
         friendlyEC.add(ECID);
     }
 
@@ -46,7 +47,7 @@ public strictfp abstract class CustomECController extends CustomRobotController 
         return false;
     }
 
-    public void handleBots(PacketHandler<Void> ph) {
+    public void handleBots(PacketHandler<?, E> ph) {
         for (int i = 0; i < botIDs.size(); i++) {
             int botID = botIDs.get(i);
             if (!canGetFlag(botID)) {
@@ -55,7 +56,7 @@ public strictfp abstract class CustomECController extends CustomRobotController 
                 i--;
                 continue;
             }
-            MarsNet.getAndHandleSafe(botID, ComType.BOT, ph);
+            marsNet.getAndHandleSafe(botID, ph);
         }
     }
 }

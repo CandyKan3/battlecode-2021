@@ -1,12 +1,15 @@
 package templatebot;
 
-import battlecode.common.*;
+import battlecode.common.GameActionException;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+import communication.MarsNet.MarsNet;
 import controllers.CustomPoliticianController;
 
-public class PoliticianController extends CustomPoliticianController {
+public class PoliticianController extends CustomPoliticianController<MessageType> {
 
-    public PoliticianController() {
-
+    public PoliticianController(MarsNet<MessageType> marsNet) {
+        super(marsNet);
     }
 
     // This cannot be moved into CustomPoliticianController, because it depends
