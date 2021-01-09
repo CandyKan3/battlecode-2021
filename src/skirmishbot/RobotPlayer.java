@@ -1,20 +1,17 @@
-package brycetestbot;
+package skirmishbot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import communication.MarsNet.MarsNet;
 import controllers.CustomRobotController;
-import templatebot.ECController;
-import templatebot.MessageType;
-import templatebot.MuckrakerController;
-import templatebot.PoliticianController;
-import templatebot.SlandererController;
+
 
 public strictfp class RobotPlayer {
     static final MarsNet<MessageType> marsNet;
 
     static {
-        byte[] headerProtocol = null;
+        byte[] headerProtocol = {7,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,-1,-1,0,0,0,0,2,0,-1,-1,0,0,0,0,3,0,-1,-1,0,0,0,0,4,0,-1,-1,0,0,0,0,5,0,-1,-1,0,0,0,0,6,0,-1,-1,0,0,1,7,0,0,0,16,-1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,2,0,0,0,0,3,0,0,0,0,4,0,0,0,0,5,0,0,0,0,6,0,0,0};
+
 
         if (headerProtocol == null) {
             MarsNet<MessageType> mNet = new MarsNet<>(MessageType.values());

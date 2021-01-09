@@ -1,11 +1,10 @@
-package brycetestbot;
+package skirmishbot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import communication.MarsNet.MarsNet;
 import controllers.CustomPoliticianController;
-import brycetestbot.SlandererController;
 
 public class PoliticianController extends CustomPoliticianController<MessageType> {
 

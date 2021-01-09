@@ -1,4 +1,4 @@
-package brycetestbot;
+package skirmishbot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;

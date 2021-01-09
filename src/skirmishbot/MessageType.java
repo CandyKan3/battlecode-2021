@@ -1,6 +1,5 @@
-package brycetestbot;
+package skirmishbot;
 
-import battlecode.common.MapLocation;
 import communication.MarsNet.DataType;
 import communication.MarsNet.Filters.BotType;
 import communication.MarsNet.Filters.IGetDestination;
