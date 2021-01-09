@@ -14,7 +14,7 @@ public abstract class DataType implements IGetNumBits {
         public abstract E unpack(int data);
     }
     @SuppressWarnings("StaticInitializerReferencesSubClass")
-    public static final DataTypeImpl<Void> RAW = new DataTypeImpl<Void>(0) {
+    public static final DataTypeImpl<Void> NONE = new DataTypeImpl<Void>(0) {
         @Override
         public int pack(Void data) {
             return 0;
@@ -30,15 +30,41 @@ public abstract class DataType implements IGetNumBits {
     public static final DataTypeImpl<MapLocation> LOCATION = new DataTypeImpl<MapLocation>(16) {
         @Override
         public int pack(MapLocation loc) {
-            return (loc.x & 0xFF) << 8 | loc.y & 0xFF;
+            return ((loc.x & 0xFF) << 8) | (loc.y & 0xFF);
         }
 
         @Override
         public MapLocation unpack(int loc) {
             MapLocation ret = MarsNet.rc.getLocation();
-            int x = loc >> 8 | ret.x & 0xFFFF00;
-            int y = loc & 0xFF | ret.y & 0xFFFF00;
+            int x = (loc >> 8) | (ret.x & 0xFFFF00);
+            int y = (loc & 0xFF) | (ret.y & 0xFFFF00);
             return new MapLocation(x,y);
+        }
+    };
+
+    @SuppressWarnings("StaticInitializerReferencesSubClass")
+    public static final DataTypeImpl<Integer> XCOORD = new DataTypeImpl<Integer>(8) {
+        @Override
+        public int pack(Integer coord) {
+            return coord & 0xFF;
+        }
+
+        @Override
+        public Integer unpack(int coord) {
+            return (MarsNet.rc.getLocation().x & 0xFFFF00) | coord;
+        }
+    };
+
+    @SuppressWarnings("StaticInitializerReferencesSubClass")
+    public static final DataTypeImpl<Integer> YCOORD = new DataTypeImpl<Integer>(8) {
+        @Override
+        public int pack(Integer coord) {
+            return coord & 0xFF;
+        }
+
+        @Override
+        public Integer unpack(int coord) {
+            return (MarsNet.rc.getLocation().y & 0xFFFF00) | coord;
         }
     };
 

@@ -11,6 +11,7 @@ import java.util.Random;
 public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetDataType> extends CustomRobotController<E> {
 
     public final RobotInfo EC;
+    private static Random r = new Random(getID());
 
     public CustomUnitController(MarsNet<E> marsNet) {
         super(marsNet);
@@ -41,7 +42,6 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
 
     public static boolean tryMoveRandom() throws GameActionException {
         Direction[] directions = Direction.allDirections();
-        Random r = new Random();
         for (int i = directions.length - 1; i > 0; i--) {
             int index = (int) (r.nextDouble() * i);
             Direction temp = directions[index];
@@ -123,6 +123,7 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
                 temp = p.rotateRight();
             p = s;
             s = temp;
+            pRotateLeft = !pRotateLeft;
         }
         return false;
     }

@@ -1,30 +1,120 @@
 package jacobtestbot3;
 
-import battlecode.common.GameActionException;
-import battlecode.common.RobotInfo;
-import battlecode.common.Team;
+import battlecode.common.*;
 import communication.MarsNet.MarsNet;
 import controllers.CustomMuckrakerController;
 
 public class MuckrakerController extends CustomMuckrakerController<MessageType> {
+    private MapLocation attackLocation = null;
+    private MapLocation scoutLocation = null;
+    private Direction scoutDirection = null;
+    private boolean scouting;
+    private boolean lockFlag;
+    private final Team enemy;
+    private final int actionRadius;
 
     public MuckrakerController(MarsNet<MessageType> marsNet) {
         super(marsNet);
+        enemy = getTeam().opponent();
+        actionRadius = getType().actionRadiusSquared;
+
+        scouting = marsNet.getAndHandleSafe(EC.ID, (p) -> {
+            switch (p.mType) {
+                case M_ScoutNorth:
+                    scoutLocation = EC.location.translate(0, 64);
+                    scoutDirection = Direction.NORTH;
+                    return true;
+                case M_ScoutEast:
+                    scoutLocation = EC.location.translate(64, 0);
+                    scoutDirection = Direction.EAST;
+                    return true;
+                case M_ScoutSouth:
+                    scoutLocation = EC.location.translate(0, -64);
+                    scoutDirection = Direction.SOUTH;
+                    return true;
+                case M_ScoutWest:
+                    scoutLocation = EC.location.translate(-64, 0);
+                    scoutDirection = Direction.WEST;
+                    return true;
+            }
+            return false;
+        });
+        if (scouting)
+            System.out.println("Scouting " + scoutDirection);
+        else
+            System.out.println("Zerg!");
+    }
+
+    private void stopScouting() {
+        scouting = false;
     }
 
     @Override
     public void doTurn() throws GameActionException {
-        Team enemy = getTeam().opponent();
-        int actionRadius = getType().actionRadiusSquared;
-        for (RobotInfo robot : senseNearbyRobots(actionRadius, enemy)) {
-            if (robot.type.canBeExposed()) {
-                // It's a slanderer... go get them!
-                if (canExpose(robot.location)) {
-                    expose(robot.location);
-                    return;
+        lockFlag = false;
+        if (scouting) {
+            int dx = 5*scoutDirection.getDeltaX();
+            int dy = 5*scoutDirection.getDeltaY();
+            MapLocation peekLocation = getLocation().translate(dx, dy);
+            if (!onTheMap(peekLocation)) {
+                peekLocation = peekLocation.add(scoutDirection.opposite());
+                while (!onTheMap(peekLocation)) {
+                    peekLocation = peekLocation.add(scoutDirection.opposite());
                 }
+                MessageType mt = MessageType.FoundNorth;
+                int coord = peekLocation.y;
+                switch (scoutDirection) {
+                    case SOUTH:
+                        mt = MessageType.FoundSouth;
+                        break;
+                    case EAST:
+                        mt = MessageType.FoundEast;
+                        coord = peekLocation.x;
+                        break;
+                    case WEST:
+                        mt = MessageType.FoundWest;
+                        coord = peekLocation.x;
+                        break;
+                }
+                marsNet.broadcastRaw(mt, coord);
+                lockFlag = true;
+                scouting = false;
+            }
+        } else {
+            attackLocation = marsNet.getAndHandleSafe(EC.ID, (p) -> {
+                switch (p.mType) {
+                    case A_Zerg:
+                    case M_Zerg:
+                        return p.asLocation();
+                    case A_StopZerg:
+                    case M_StopZerg:
+                        return null;
+                }
+                return attackLocation;
+            });
+        }
+
+        boolean exposed = false;
+        for (RobotInfo robot : senseNearbyRobots(actionRadius, enemy)) {
+            if (!exposed && robot.type.canBeExposed() && canExpose(robot.location)) {
+                expose(robot.location);
+                exposed = true;
+                continue;
+            }
+            if (!lockFlag && robot.type == RobotType.ENLIGHTENMENT_CENTER) {
+                marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
+                lockFlag = true;
             }
         }
-        tryMoveRandom();
+
+        if (scouting) {
+            tryMoveToward(scoutLocation);
+        } else {
+            if (attackLocation != null) {
+                tryMoveToward(attackLocation);
+            } else {
+                tryMoveRandom();
+            }
+        }
     }
 }

@@ -74,4 +74,48 @@ public class Packet<E extends IGetDataType> {
             return null;
         return DataType.ID.unpack(data);
     }
+
+    // XCOORD casts
+
+    public void setXCoord(E mType, int coord) {
+        if (this.mType != null) {
+            this.mType = mType;
+            this.data = coord;
+        }
+    }
+
+    public static <E extends IGetDataType> Packet<E> fromXCoord(E mType, int coord) {
+        Packet<E> p = new Packet<>();
+        if (mType.getDataType()== DataType.ID)
+            p.setID(mType, coord);
+        return p;
+    }
+
+    public Integer asXCoord() {
+        if (mType.getDataType() != DataType.XCOORD)
+            return null;
+        return DataType.XCOORD.unpack(data);
+    }
+
+    // YCoord casts
+
+    public void setYCoord(E mType, int coord) {
+        if (this.mType != null) {
+            this.mType = mType;
+            this.data = coord;
+        }
+    }
+
+    public static <E extends IGetDataType> Packet<E> fromYCoord(E mType, int coord) {
+        Packet<E> p = new Packet<>();
+        if (mType.getDataType()== DataType.ID)
+            p.setID(mType, coord);
+        return p;
+    }
+
+    public Integer asYCoord() {
+        if (mType.getDataType() != DataType.YCOORD)
+            return null;
+        return DataType.YCOORD.unpack(data);
+    }
 }

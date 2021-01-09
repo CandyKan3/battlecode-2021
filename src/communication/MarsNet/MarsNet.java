@@ -45,6 +45,18 @@ public strictfp class MarsNet<E extends Enum<E> & IGetDataType> {
         return broadcastRaw(mType, DataType.LOCATION.pack(loc));
     }
 
+    public boolean broadcastXCoord(E mType, int coord) {
+        if (mType.getDataType() != DataType.XCOORD)
+            return false;
+        return broadcastRaw(mType, DataType.XCOORD.pack(coord));
+    }
+
+    public boolean broadcastYCoord(E mType, int coord) {
+        if (mType.getDataType() != DataType.YCOORD)
+            return false;
+        return broadcastRaw(mType, DataType.YCOORD.pack(coord));
+    }
+
     public boolean broadcastID(E mType, int id) {
         if (mType.getDataType() != DataType.ID)
             return false;
