@@ -4,13 +4,14 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
-import communication.MarsNet.ComType;
 import communication.MarsNet.MarsNet;
-import communication.MarsNet.MessageType;
 import controllers.CustomRobotController;
 import controllers.CustomSlandererController;
 
-public class SlandererController extends CustomSlandererController {
+public class SlandererController extends CustomSlandererController<MessageType> {
+    public SlandererController(MarsNet<MessageType> marsNet) {
+        super(marsNet);
+    }
     public MapLocation attackCenter = null;
 
     // This cannot be moved into CustomSlandererController, because it depends
@@ -29,8 +30,8 @@ public class SlandererController extends CustomSlandererController {
     public void doTurn() throws GameActionException {
         transform(); // Leave this here
 
-        MapLocation foundLoc = MarsNet.getAndHandle(EC.ID, ComType.EC, (p) -> {
-            if (p.mType == MessageType.S_Zerg) {
+        MapLocation foundLoc = marsNet.getAndHandle(EC.ID, (p) -> {
+            if (p.mType == MessageType.S_Zerg || p.mType== MessageType.Pre_Zerg) {
                 return p.asLocation();
             }
             return null;
@@ -46,7 +47,7 @@ public class SlandererController extends CustomSlandererController {
                 MessageType mt = MessageType.FoundEnemyEC;
                 if (robot.team != getTeam().opponent())
                     mt = MessageType.FoundNeutralEC;
-                MarsNet.broadcastLocation(mt, robot.location);
+                marsNet.broadcastLocation(mt, robot.location);
                 break;
             }
         }

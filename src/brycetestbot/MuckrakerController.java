@@ -1,14 +1,22 @@
 package brycetestbot;
 
-import battlecode.common.GameActionException;
-import battlecode.common.RobotInfo;
-import battlecode.common.Team;
+import battlecode.common.*;
+import communication.MarsNet.Filters.DestinationFilter;
+import communication.MarsNet.MarsNet;
 import controllers.CustomMuckrakerController;
 
-public class MuckrakerController extends CustomMuckrakerController {
+public class MuckrakerController extends CustomMuckrakerController<MessageType> {
+    public MuckrakerController(MarsNet<MessageType> marsNet) {
+        super(marsNet);
+    }
+    public MapLocation pushGoal = null;
 
     @Override
     public void doTurn() throws GameActionException {
+
+        // Find pushGoal (where we want to move to)
+        MapLocation foundLoc = marsNet.getAndHandleF(EC.ID, DestinationFilter::Muckraker, (p) -> p.asLocation());
+
         Team enemy = getTeam().opponent();
         int actionRadius = getType().actionRadiusSquared;
         for (RobotInfo robot : senseNearbyRobots(actionRadius, enemy)) {
@@ -19,7 +27,26 @@ public class MuckrakerController extends CustomMuckrakerController {
                     return;
                 }
             }
+            // Search for enlightenment centers
+            else if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
+                if (robot.team == getTeam())
+                    continue;
+
+                MessageType mt = MessageType.FoundEnemyEC;
+                if (robot.team != getTeam().opponent())
+                    mt = MessageType.FoundNeutralEC;
+                marsNet.broadcastLocation(mt, robot.location);
+                break;
+            }
         }
-        tryMoveRandom();
+
+        if (pushGoal != null) {
+            if (tryMoveToward(pushGoal)) {
+                // TODO: Figure out if you are in a corner then get coords
+                System.out.println("x " + getLocation().x + " y " + getLocation().y);
+            };
+        } else {
+            tryMoveRandom();
+        }
     }
 }

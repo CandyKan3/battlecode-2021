@@ -4,21 +4,19 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import communication.MarsNet.MarsNet;
-import communication.MarsNet.MessageType;
 import controllers.CustomPoliticianController;
 import brycetestbot.SlandererController;
 
-public class PoliticianController extends CustomPoliticianController {
-
-    public PoliticianController() {
-
-    }
+public class PoliticianController extends CustomPoliticianController<MessageType> {
 
     // This cannot be moved into CustomPoliticianController, because it depends
     // on your actual implementation of PoliticianController, which is not
     // accessible from the abstract class. Keep it, but add to as necessary.
     public PoliticianController(SlandererController sc) {
         super(sc);
+    }
+    public PoliticianController(MarsNet<MessageType> marsNet) {
+        super(marsNet);
     }
 
     @Override
@@ -34,7 +32,7 @@ public class PoliticianController extends CustomPoliticianController {
                 MessageType mt = MessageType.FoundEnemyEC;
                 if (robot.team != getTeam().opponent())
                     mt = MessageType.FoundNeutralEC;
-                MarsNet.broadcastLocation(mt, robot.location);
+                marsNet.broadcastLocation(mt, robot.location);
                 break;
             }
         }

@@ -5,7 +5,6 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotType;
 import communication.MarsNet.MarsNet;
-import communication.MarsNet.MessageType;
 import controllers.CustomECController;
 
 public class ECController extends CustomECController {
