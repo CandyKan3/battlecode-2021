@@ -1,18 +1,23 @@
-package templatebot;
+package jacobtestbot3;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import communication.MarsNet.MarsNet;
 import controllers.CustomRobotController;
+import templatebot.ECController;
+import templatebot.MessageType;
+import templatebot.MuckrakerController;
+import templatebot.PoliticianController;
+import templatebot.SlandererController;
 
 public strictfp class RobotPlayer {
-    static final MarsNet<MessageType> marsNet;
+    static final MarsNet<templatebot.MessageType> marsNet;
 
     static {
         byte[] headerProtocol = null;
 
         if (headerProtocol == null) {
-            MarsNet<MessageType> mNet = new MarsNet<>(MessageType.values());
+            MarsNet<templatebot.MessageType> mNet = new MarsNet<>(templatebot.MessageType.values());
             byte[] data = mNet.serializedHeaderProtocol();
             StringBuilder sb = new StringBuilder();
             sb.append('{');
@@ -26,7 +31,7 @@ public strictfp class RobotPlayer {
             System.out.println("Serialized Header Protocol: " + sb);
             marsNet = null;
         } else {
-            marsNet = new MarsNet<>(headerProtocol, MessageType.values());
+            marsNet = new MarsNet<>(headerProtocol, templatebot.MessageType.values());
         }
     }
 
