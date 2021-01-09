@@ -1,18 +1,20 @@
 package controllers;
 
 import battlecode.common.*;
+import communication.MarsNet.IGetDataType;
+import communication.MarsNet.MarsNet;
 
 
 import java.util.Random;
 
 // Contains useful functions and data for non-EC bots
-public strictfp abstract class CustomBotController extends CustomRobotController {
+public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetDataType> extends CustomRobotController<E> {
 
     public final RobotInfo EC;
 
-    public CustomBotController() {
-        findEC:
-        {
+    public CustomUnitController(MarsNet<E> marsNet) {
+        super(marsNet);
+        findEC: {
             for (Direction dir : Direction.allDirections()) {
                 MapLocation adj = adjacentLocation(dir);
                 RobotInfo robot;
@@ -28,12 +30,11 @@ public strictfp abstract class CustomBotController extends CustomRobotController
                     break findEC;
                 }
             }
-            //noinspection ConstantConditions
-            EC = null;
+            EC = new RobotInfo(0, Team.NEUTRAL, RobotType.ENLIGHTENMENT_CENTER, 0, 0, new MapLocation(0,0));
         }
     }
 
-    public CustomBotController(CustomBotController cbc) {
+    public CustomUnitController(CustomUnitController<E> cbc) {
         super(cbc);
         EC = cbc.EC;
     }

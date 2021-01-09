@@ -21,6 +21,7 @@ public strictfp abstract class CustomRobotController<E extends Enum<E> & IGetDat
 
     public CustomRobotController(CustomRobotController<E> crc) {
         this.marsNet = crc.marsNet;
+        this.turn = crc.turn;
     }
 
     public void run() throws GameActionException {

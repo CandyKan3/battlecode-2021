@@ -2,8 +2,6 @@ package communication.MarsNet;
 
 import battlecode.common.MapLocation;
 
-import javax.xml.crypto.Data;
-
 public class Packet<E extends IGetDataType> {
     public E mType;
     private int data;
