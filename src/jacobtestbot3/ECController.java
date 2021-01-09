@@ -12,6 +12,8 @@ public class ECController extends CustomECController<MessageType> {
     private MessageType[] scoutDirectives = {MessageType.M_ScoutNorth, MessageType.M_ScoutEast, MessageType.M_ScoutSouth, MessageType.M_ScoutWest};
     private int numScoutDirections = 4;
     private int currScoutDirection = 0;
+    private int scoutCooldown = 0;
+    private int spawnCycle = 0;
     private ArrayList<Integer> scouts = new ArrayList<>();
     private int northYCoord;
     private int eastXCoord;
@@ -46,19 +48,26 @@ public class ECController extends CustomECController<MessageType> {
     @Override
     public void doTurn() throws GameActionException {
         lockFlag = false;
+        if (scoutCooldown > 0)
+            scoutCooldown--;
         if (!doneScouting) {
             if (spawnedScoutLastTurn) {
                 lockFlag = true;
                 spawnedScoutLastTurn = false;
-            }
-            for (Direction dir : Direction.allDirections()) {
-                if (buildRobotSafe(RobotType.MUCKRAKER, dir, 100)) {
-                    scouts.add(getLastBuiltID());
-                    marsNet.broadcastRaw(scoutDirectives[currScoutDirection],0);
-                    spawnedScoutLastTurn = true;
-                    lockFlag = true;
-                    currScoutDirection = (currScoutDirection + 1) % numScoutDirections;
-                    break;
+            } else if (getInfluence() > 30 && scoutCooldown == 0) {
+                for (Direction dir : Direction.allDirections()) {
+                    if (buildRobotSafe(RobotType.MUCKRAKER, dir, 30)) {
+                        scouts.add(getLastBuiltID());
+                        marsNet.broadcastRaw(scoutDirectives[currScoutDirection], 0);
+                        spawnedScoutLastTurn = true;
+                        lockFlag = true;
+                        currScoutDirection++;
+                        if (currScoutDirection >= numScoutDirections) {
+                            scoutCooldown = 30;
+                            currScoutDirection %= numScoutDirections;
+                        }
+                        break;
+                    }
                 }
             }
             for (int i = 0; i < scouts.size(); i++) {
@@ -101,9 +110,21 @@ public class ECController extends CustomECController<MessageType> {
             }
         } else {
             int influence = Math.max(21, getInfluence() / 3);
+            RobotType buildType = RobotType.SLANDERER;
+            switch (spawnCycle) {
+                case 1:
+                    buildType = RobotType.MUCKRAKER;
+                    break;
+                case 3:
+                case 5:
+                case 7:
+                    buildType = RobotType.POLITICIAN;
+                    break;
+            }
             if (getInfluence() > influence) {
                 for (Direction dir : Direction.allDirections()) {
-                    if (buildRobotSafe(RobotType.SLANDERER, dir, influence)) {
+                    if (buildRobotSafe(buildType, dir, influence)) {
+                        spawnCycle = (spawnCycle + 1) & 7;
                         break;
                     }
                 }

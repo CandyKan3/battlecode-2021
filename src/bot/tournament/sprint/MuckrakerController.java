@@ -44,7 +44,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
         if (initialGoal != null) {
             if (tryMoveToward(initialGoal)) {
                 // TODO: Figure out if you are in a corner then get coords
-                System.out.println("x " + getLocation().x + " y " + getLocation().y);
+                //System.out.println("x " + getLocation().x + " y " + getLocation().y);
             };
         } else {
             tryMoveRandom();

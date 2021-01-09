@@ -3,6 +3,7 @@ package jacobtestbot3;
 import battlecode.common.*;
 import communication.MarsNet.MarsNet;
 import controllers.CustomMuckrakerController;
+import org.omg.CORBA.OBJECT_NOT_EXIST;
 
 public class MuckrakerController extends CustomMuckrakerController<MessageType> {
     private MapLocation attackLocation = null;
@@ -39,10 +40,6 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
             }
             return false;
         });
-        if (scouting)
-            System.out.println("Scouting " + scoutDirection);
-        else
-            System.out.println("Zerg!");
     }
 
     private void stopScouting() {
@@ -111,7 +108,19 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
             tryMoveToward(scoutLocation);
         } else {
             if (attackLocation != null) {
-                tryMoveToward(attackLocation);
+                MapLocation me = getLocation();
+                if (me.isAdjacentTo(attackLocation)) {
+                    for (Direction dir : Direction.allDirections()) {
+                        if (me.add(dir).isAdjacentTo(attackLocation)) {
+                            if (canMove(dir)) {
+                                move(dir);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    tryMoveToward(attackLocation);
+                }
             } else {
                 tryMoveRandom();
             }

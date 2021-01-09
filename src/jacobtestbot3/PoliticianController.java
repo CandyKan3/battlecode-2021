@@ -4,7 +4,10 @@ import battlecode.common.*;
 import communication.MarsNet.MarsNet;
 import controllers.CustomPoliticianController;
 
+import java.util.Map;
+
 public class PoliticianController extends CustomPoliticianController<MessageType> {
+    private MapLocation attackLocation;
 
     public PoliticianController(MarsNet<MessageType> marsNet) {
         super(marsNet);
@@ -19,22 +22,34 @@ public class PoliticianController extends CustomPoliticianController<MessageType
 
     @Override
     public void doTurn() throws GameActionException {
-        for (RobotInfo robot : senseNearbyRobots()) {
+        for (RobotInfo robot : senseNearbyRobots(RobotType.POLITICIAN.sensorRadiusSquared, getTeam().opponent())) {
             if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
-                if (robot.team == getTeam()) {
-                    if (getLocation().isAdjacentTo(robot.location) && canEmpower(3))
-                        empower(3);
-                    continue;
-                }
-
-                MessageType mt = MessageType.FoundEnemyEC;
-                if (robot.team != getTeam().opponent())
-                    mt = MessageType.FoundNeutralEC;
-                marsNet.broadcastLocation(mt, robot.location);
+                marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
                 break;
             }
         }
 
-        tryMoveToward(EC.location);
+        attackLocation = marsNet.getAndHandleSafe(EC.ID, (p) -> {
+            switch (p.mType) {
+                case A_Zerg:
+                case P_Zerg:
+                    return p.asLocation();
+                case A_StopZerg:
+                case P_StopZerg:
+                    return null;
+            }
+            return attackLocation;
+        });
+
+        if (attackLocation != null) {
+            MapLocation me = getLocation();
+            if (me.isWithinDistanceSquared(attackLocation, 8) && canEmpower(9)) {
+                empower(9);
+                return;
+            }
+            tryMoveToward(attackLocation);
+        } else {
+            tryMoveRandom();
+        }
     }
 }

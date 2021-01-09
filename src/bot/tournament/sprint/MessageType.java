@@ -29,8 +29,6 @@ public enum MessageType implements IGetDataType, IGetDestination {
         this.dType = dType;
     }
 
-
-
     @Override
     public DataType getDataType() {
         return this.dType;

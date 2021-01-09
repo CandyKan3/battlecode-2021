@@ -11,6 +11,7 @@ public enum MessageType implements IGetDataType, IGetDestination {
     M_ScoutEast,
     M_ScoutSouth,
     M_ScoutWest,
+    P_StopZerg,
     S_StopZerg,
     M_StopZerg,
     A_StopZerg,
@@ -20,6 +21,7 @@ public enum MessageType implements IGetDataType, IGetDestination {
     FoundWest(BotType.ENLIGHTENMENT_CENTER, DataType.XCOORD),
     FoundEnemyEC(BotType.ENLIGHTENMENT_CENTER, DataType.LOCATION),
     FoundNeutralEC(BotType.ENLIGHTENMENT_CENTER, DataType.LOCATION),
+    P_Zerg(BotType.POLITICIAN, DataType.LOCATION),
     S_Zerg(BotType.SLANDERER, DataType.LOCATION),
     M_Zerg(BotType.MUCKRAKER, DataType.LOCATION),
     A_Zerg(BotType.UNIT, DataType.LOCATION)
