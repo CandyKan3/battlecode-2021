@@ -20,7 +20,7 @@ public class ECController extends CustomECController<MessageType> {
     };
 
     private int enemyECLocationsSearched = 0;
-    private final int initialScoutingInfluence;
+    private final int initialScoutingInfluence = 1;
 
 
     @Override
