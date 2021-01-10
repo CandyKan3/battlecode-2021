@@ -73,6 +73,7 @@ public class ECController extends CustomECController<MessageType> {
         if (wonLastVote && votePriority < .2)
             newBid = Math.min(lastBid, newBid);
 
+        newBid = Math.max(newBid, 1);
         if (canBid(newBid))
             bid(newBid);
 
