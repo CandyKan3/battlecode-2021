@@ -10,23 +10,29 @@ public class ECController extends CustomECController<MessageType> {
     }
 
     public int turncount = 0;
-    public boolean prepping = false;
-    private boolean searchCornerToggleBotLeft = true;
-    private MapLocation botLeft = new MapLocation(0, 0);
-    private final int maxBoardSize = 30000 + 64;
-    private MapLocation topRight = new MapLocation(maxBoardSize, maxBoardSize);
+
+    private MapLocation location = getLocation();
+    private MapLocation[] potentialEnemyEC = {
+            new MapLocation(location.x + 64, location.y),
+            new MapLocation(location.x - 64, location.y),
+            new MapLocation(location.x , location.y + 64),
+            new MapLocation(location.x - 64, location.y - 64)
+    };
+
+    private int enemyECLocationsSearched = 0;
+    private final int initialScoutingInfluence = 1;
+
 
     @Override
     public void doTurn() throws GameActionException {
         int influence = 20 * getRobotCount();
-        if (turn < 50) {
-            if (getInfluence() >= 1) {
+        if (enemyECLocationsSearched < potentialEnemyEC.length) {
+            if (getInfluence() >= initialScoutingInfluence) {
                 for (Direction dir : Direction.allDirections()) {
-                    if (buildRobotSafe(RobotType.MUCKRAKER, dir, 1)) {
-                        // Start bots to find corners of grid
-                        MapLocation corner = searchCornerToggleBotLeft ? topRight : topRight;
-                        searchCornerToggleBotLeft = !searchCornerToggleBotLeft;
-                        marsNet.broadcastLocation(MessageType.M_Search, corner);
+                    if (buildRobotSafe(RobotType.MUCKRAKER, dir, initialScoutingInfluence)) {
+                        // Start bots to find enemy EC
+                        marsNet.broadcastLocation(MessageType.M_Search, potentialEnemyEC[enemyECLocationsSearched++]);
+                        break;
                     }
                 }
             }
