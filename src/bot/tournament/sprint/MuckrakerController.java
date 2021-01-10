@@ -15,12 +15,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
     public void doTurn() throws GameActionException {
 
         // Find initialGoal (where we want to move to)
-        MapLocation foundLoc = marsNet.getAndHandleF(EC.ID, DestinationFilter::Muckraker, (p) -> {
-            if (p.mType == MessageType.M_Search)
-                return p.asLocation();
-            return null;
-        });
-
+        MapLocation foundLoc = marsNet.getAndHandleF(EC.ID, DestinationFilter::Muckraker, (p) -> p.asLocation());
         if (foundLoc != null && initialGoal == null) initialGoal = foundLoc;
 
         Team enemy = getTeam().opponent();
@@ -47,7 +42,10 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
         }
 
         if (initialGoal != null) {
-            tryMoveToward(initialGoal);
+            if (tryMoveToward(initialGoal)) {
+                // TODO: Figure out if you are in a corner then get coords
+                //System.out.println("x " + getLocation().x + " y " + getLocation().y);
+            };
         } else {
             tryMoveRandom();
         }

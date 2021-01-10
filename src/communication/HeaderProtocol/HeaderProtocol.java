@@ -87,7 +87,7 @@ public class HeaderProtocol<E extends Enum<E> & IGetNumBits> {
             return;
         }
         TreeNodeInternal<E> cRoot = (TreeNodeInternal<E>) root;
-        System.out.println(sb + "Internal: " + cRoot.shamt + " - " + cRoot.children.length + " options:");
+        System.out.println(sb + "Internal: " + cRoot.shamt + " - " + Integer.toHexString(cRoot.mask) + " - " + cRoot.children.length + " options:");
         for (int i = 0; i < cRoot.children.length; i++) {
             printTree(cRoot.children[i], level+1);
         }
@@ -109,6 +109,7 @@ public class HeaderProtocol<E extends Enum<E> & IGetNumBits> {
             sortedEnumValues[i] = enumValues[j];
         }
         root = buildTree(sortedHeaders, sortedDataSizes, sortedEnumValues, bitSize);
+        //printTree(root, 0);
     }
 
     private void init(E[] enumValues, int bitSize) {
@@ -139,7 +140,7 @@ public class HeaderProtocol<E extends Enum<E> & IGetNumBits> {
 
         int nextInt() {
             cursor += 4;
-            return data[cursor-4] | data[cursor-3] << 8 | data[cursor-2] << 16 | data[cursor-1] << 24;
+            return (data[cursor-4] & 0xFF) | (data[cursor-3] & 0xFF) << 8 | (data[cursor-2] & 0xFF) << 16 | (data[cursor-1] & 0xFF) << 24;
         }
 
         byte nextByte() {
@@ -147,10 +148,11 @@ public class HeaderProtocol<E extends Enum<E> & IGetNumBits> {
         }
 
         void putInt(int i) {
-            data[cursor++] = (byte)i;
-            data[cursor++] = (byte)(i >>> 8);
-            data[cursor++] = (byte)(i >>> 16);
-            data[cursor++] = (byte)(i >>> 24);
+            data[cursor] = (byte)i;
+            data[cursor+1] = (byte)(i >>> 8);
+            data[cursor+2] = (byte)(i >>> 16);
+            data[cursor+3] = (byte)(i >>> 24);
+            cursor += 4;
         }
 
         void putByte(byte i) {
@@ -185,6 +187,7 @@ public class HeaderProtocol<E extends Enum<E> & IGetNumBits> {
             dataMasks[i] = shp.nextInt();
         }
         TreeNode<E> root = deSerializeTree(shp, enumValues);
+        //printTree(root, 0);
         return new HeaderProtocol<>(headers, dataMasks, root);
     }
 

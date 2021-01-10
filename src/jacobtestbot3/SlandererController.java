@@ -7,7 +7,7 @@ import controllers.CustomRobotController;
 import controllers.CustomSlandererController;
 
 public class SlandererController extends CustomSlandererController<MessageType> {
-    public MapLocation attackCenter;
+    public MapLocation attackCenter = null;
 
     public SlandererController(MarsNet<MessageType> marsNet) {
         super(marsNet);
@@ -29,31 +29,6 @@ public class SlandererController extends CustomSlandererController<MessageType> 
     public void doTurn() throws GameActionException {
         transform(); // Leave this here
 
-        MapLocation foundLoc = marsNet.getAndHandleF(EC.ID, DestinationFilter::Slanderer, (p) -> {
-            if (p.mType == MessageType.S_Zerg) {
-                return p.asLocation();
-            }
-            return null;
-        });
-        if (attackCenter == null)
-            attackCenter = foundLoc;
-
-        for (RobotInfo robot : senseNearbyRobots()) {
-            if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
-                if (robot.team == getTeam())
-                    continue;
-
-                MessageType mt = MessageType.FoundEnemyEC;
-                if (robot.team != getTeam().opponent())
-                    mt = MessageType.FoundNeutralEC;
-                marsNet.broadcastLocation(mt, robot.location);
-                break;
-            }
-        }
-
-        if (attackCenter != null) {
-            tryMoveToward(attackCenter);
-        } else
-            tryMoveRandom();
+        tryMoveRandom();
     }
 }

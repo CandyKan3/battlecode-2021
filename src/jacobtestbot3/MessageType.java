@@ -6,30 +6,33 @@ import communication.MarsNet.Filters.IGetDestination;
 import communication.MarsNet.IGetDataType;
 
 public enum MessageType implements IGetDataType, IGetDestination {
-    // Add messages below at will! Maximum 128. Order here does not matter!.
-    //NONE,
+    NONE,
+    M_ScoutNorth,
+    M_ScoutEast,
+    M_ScoutSouth,
+    M_ScoutWest,
+    P_StopZerg,
+    S_StopZerg,
+    M_StopZerg,
+    A_StopZerg,
+    FoundNorth(BotType.ENLIGHTENMENT_CENTER, DataType.YCOORD),
+    FoundEast(BotType.ENLIGHTENMENT_CENTER, DataType.XCOORD),
+    FoundSouth(BotType.ENLIGHTENMENT_CENTER, DataType.YCOORD),
+    FoundWest(BotType.ENLIGHTENMENT_CENTER, DataType.XCOORD),
     FoundEnemyEC(BotType.ENLIGHTENMENT_CENTER, DataType.LOCATION),
     FoundNeutralEC(BotType.ENLIGHTENMENT_CENTER, DataType.LOCATION),
+    P_Zerg(BotType.POLITICIAN, DataType.LOCATION),
     S_Zerg(BotType.SLANDERER, DataType.LOCATION),
-    //Test(BotType.NONE, DataType.ID),
-    F1(BotType.NONE, DataType.LOCATION),
-    F2(BotType.NONE, DataType.LOCATION),
-    F3(BotType.NONE, DataType.LOCATION),
-    F4(BotType.NONE, DataType.LOCATION),
-    F5(BotType.NONE, DataType.LOCATION),
-    F6(BotType.NONE, DataType.LOCATION),
-    F7(BotType.NONE, DataType.LOCATION),
-    F8(BotType.NONE, DataType.LOCATION),
-    F9(BotType.NONE, DataType.LOCATION),
-    F10(BotType.NONE, DataType.LOCATION),
-    F11(BotType.NONE, DataType.LOCATION)
+    M_Zerg(BotType.MUCKRAKER, DataType.LOCATION),
+    A_Zerg(BotType.UNIT, DataType.LOCATION)
+
     ; // Leave this here
 
     public final BotType dest;
     public final DataType dType;
     MessageType() {
         dest = BotType.NONE;
-        dType = DataType.RAW;
+        dType = DataType.NONE;
     }
 
     MessageType(BotType dest, DataType dType) {

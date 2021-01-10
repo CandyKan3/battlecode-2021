@@ -41,10 +41,16 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
 
     public boolean buildRobotSafe(RobotType robotType, Direction direction, int i) {
         try {
-            buildRobot(robotType, direction, i);
-            return true;
+            if (canBuildRobot(robotType, direction, i)) {
+                buildRobot(robotType, direction, i);
+                return true;
+            }
         } catch (GameActionException ignore) { }
         return false;
+    }
+
+    public int getLastBuiltID() {
+        return botIDs.get(botIDs.size() - 1);
     }
 
     public void handleBots(PacketHandler<?, E> ph) {

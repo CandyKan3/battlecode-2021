@@ -14,7 +14,7 @@ public enum MessageType implements IGetDataType, IGetDestination {
     public final DataType dType;
     MessageType() {
         dest = BotType.NONE;
-        dType = DataType.RAW;
+        dType = DataType.NONE;
     }
 
     MessageType(BotType dest, DataType dType) {
