@@ -3,7 +3,6 @@ package jacobtestbot3;
 import battlecode.common.*;
 import communication.MarsNet.MarsNet;
 import controllers.CustomECController;
-import org.hamcrest.number.IsCloseTo;
 
 import java.util.ArrayList;
 
@@ -50,26 +49,49 @@ public class ECController extends CustomECController<MessageType> {
         lockFlag = false;
         if (scoutCooldown > 0)
             scoutCooldown--;
-        if (!doneScouting) {
-            if (spawnedScoutLastTurn) {
-                lockFlag = true;
-                spawnedScoutLastTurn = false;
-            } else if (getInfluence() > 30 && scoutCooldown == 0) {
+        if (!doneScouting && spawnedScoutLastTurn) {
+            lockFlag = true;
+            spawnedScoutLastTurn = false;
+        }
+        else if (getInfluence() > 0 && !doneScouting && scoutCooldown == 0) {
+            for (Direction dir : Direction.allDirections()) {
+                if (buildRobotSafe(RobotType.MUCKRAKER, dir, 30)) {
+                    scouts.add(getLastBuiltID());
+                    marsNet.broadcastRaw(scoutDirectives[currScoutDirection], 0);
+                    spawnedScoutLastTurn = true;
+                    lockFlag = true;
+                    currScoutDirection++;
+                    if (currScoutDirection >= numScoutDirections) {
+                        scoutCooldown = 50;
+                        currScoutDirection %= numScoutDirections;
+                    }
+                    break;
+                }
+            }
+        } else {
+            int influence = Math.max(21, getInfluence() / 3);
+            if (getInfluence() > influence) {
+                RobotType buildType = RobotType.SLANDERER;
+                switch (spawnCycle) {
+                    case 1:
+                        buildType = RobotType.MUCKRAKER;
+                        break;
+                    case 3:
+                    case 5:
+                    case 7:
+                        buildType = RobotType.POLITICIAN;
+                        break;
+                }
                 for (Direction dir : Direction.allDirections()) {
-                    if (buildRobotSafe(RobotType.MUCKRAKER, dir, 30)) {
-                        scouts.add(getLastBuiltID());
-                        marsNet.broadcastRaw(scoutDirectives[currScoutDirection], 0);
-                        spawnedScoutLastTurn = true;
-                        lockFlag = true;
-                        currScoutDirection++;
-                        if (currScoutDirection >= numScoutDirections) {
-                            scoutCooldown = 30;
-                            currScoutDirection %= numScoutDirections;
-                        }
+                    if (buildRobotSafe(buildType, dir, influence)) {
+                        spawnCycle = (spawnCycle + 1) % 12;
                         break;
                     }
                 }
             }
+        }
+
+        if (!doneScouting) {
             for (int i = 0; i < scouts.size(); i++) {
                 int scoutID = scouts.get(i);
                 if (!canGetFlag(scoutID)) {
@@ -107,27 +129,6 @@ public class ECController extends CustomECController<MessageType> {
                     }
                     return fi;
                 });
-            }
-        } else {
-            int influence = Math.max(21, getInfluence() / 3);
-            RobotType buildType = RobotType.SLANDERER;
-            switch (spawnCycle) {
-                case 1:
-                    buildType = RobotType.MUCKRAKER;
-                    break;
-                case 3:
-                case 5:
-                case 7:
-                    buildType = RobotType.POLITICIAN;
-                    break;
-            }
-            if (getInfluence() > influence) {
-                for (Direction dir : Direction.allDirections()) {
-                    if (buildRobotSafe(buildType, dir, influence)) {
-                        spawnCycle = (spawnCycle + 1) & 7;
-                        break;
-                    }
-                }
             }
         }
 

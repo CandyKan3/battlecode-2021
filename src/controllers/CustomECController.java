@@ -2,8 +2,6 @@ package controllers;
 
 import battlecode.common.*;
 import communication.MarsNet.*;
-import communication.MarsNet.Filters.DestinationFilter;
-import util.PriorityElement;
 
 import java.util.ArrayList;
 import java.util.PriorityQueue;
