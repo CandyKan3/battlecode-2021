@@ -30,6 +30,9 @@ public class SlandererController extends CustomSlandererController<MessageType> 
     public void doTurn() throws GameActionException {
         transform(); // Leave this here
 
-        trySpreadMove();
+        if (turn < 10)
+            tryMoveRandom();
+        else
+            trySpreadMove();
     }
 }

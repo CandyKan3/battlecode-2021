@@ -4,7 +4,6 @@ import battlecode.common.*;
 import communication.MarsNet.IGetDataType;
 import communication.MarsNet.MarsNet;
 
-
 import java.util.Random;
 
 // Contains useful functions and data for non-EC bots
@@ -129,26 +128,26 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
 
     public static boolean trySpreadMove() throws GameActionException {
 
-        int actionRadius = getType().actionRadiusSquared;
-        RobotInfo[] nearbyRobots = senseNearbyRobots(actionRadius, getTeam());
+        MapLocation[] nearbyRobots = detectNearbyRobots();
 
         double avgX = 0;
         double avgY = 0;
-        for (RobotInfo robot : nearbyRobots) {
-            if (robot.ID != getID()) {
-                MapLocation loc = robot.getLocation();
-                avgX += loc.x;
-                avgY += loc.y;
-            }
+        for (MapLocation loc : nearbyRobots) {
+            avgX += loc.x;
+            avgY += loc.y;
         }
         avgX /= nearbyRobots.length;
         avgY /= nearbyRobots.length;
 
         MapLocation currLoc = getLocation();
+        Direction dir = currLoc.directionTo(new MapLocation((int) avgX, (int) avgY)).opposite();
 
-        MapLocation target = new MapLocation(currLoc.x + (int) (avgX - currLoc.x), currLoc.y + (int) (avgY - currLoc.y));
+        if (canMove(dir)) {
+            move(dir);
+            return true;
+        }
 
-        return tryMoveToward(target);
+        return false;
     }
 }
 
