@@ -189,6 +189,8 @@ public class ECController extends CustomECController<MessageType> {
             MapLocation attackLocation = enemyEC.peek();
             if (attackLocation != null) {
                 marsNet.broadcastLocation(MessageType.A_Zerg, attackLocation);
+            } else {
+                marsNet.broadcastRaw(MessageType.A_StopZerg, 0);
             }
         }
 

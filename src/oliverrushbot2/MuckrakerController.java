@@ -49,8 +49,8 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
     public void doTurn() throws GameActionException {
         lockFlag = false;
         if (scouting) {
-            int dx = 5*scoutDirection.getDeltaX();
-            int dy = 5*scoutDirection.getDeltaY();
+            int dx = 5 * scoutDirection.getDeltaX();
+            int dy = 5 * scoutDirection.getDeltaY();
             MapLocation peekLocation = getLocation().translate(dx, dy);
             if (!onTheMap(peekLocation)) {
                 peekLocation = peekLocation.add(scoutDirection.opposite());
@@ -99,6 +99,11 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
             }
             if (!lockFlag && robot.type == RobotType.ENLIGHTENMENT_CENTER) {
                 marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
+
+                // EC was taken over
+                if (robot.team == getTeam() && robot.location == attackLocation)
+                    attackLocation = null;
+
                 lockFlag = true;
             }
         }
@@ -121,7 +126,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                     tryMoveToward(attackLocation);
                 }
             } else {
-                tryMoveRandom();
+                trySpreadMove();
             }
         }
     }

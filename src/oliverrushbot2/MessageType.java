@@ -25,7 +25,6 @@ public enum MessageType implements IGetDataType, IGetDestination {
     S_Zerg(BotType.SLANDERER, DataType.LOCATION),
     M_Zerg(BotType.MUCKRAKER, DataType.LOCATION),
     A_Zerg(BotType.UNIT, DataType.LOCATION)
-
     ; // Leave this here
 
     public final BotType dest;

@@ -15,7 +15,8 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
 
     public CustomUnitController(MarsNet<E> marsNet) {
         super(marsNet);
-        findEC: {
+        findEC:
+        {
             for (Direction dir : Direction.allDirections()) {
                 MapLocation adj = adjacentLocation(dir);
                 RobotInfo robot;
@@ -31,7 +32,7 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
                     break findEC;
                 }
             }
-            EC = new RobotInfo(0, Team.NEUTRAL, RobotType.ENLIGHTENMENT_CENTER, 0, 0, new MapLocation(0,0));
+            EC = new RobotInfo(0, Team.NEUTRAL, RobotType.ENLIGHTENMENT_CENTER, 0, 0, new MapLocation(0, 0));
         }
     }
 
@@ -88,7 +89,7 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
         if (dx == 0) {
             slope = Double.POSITIVE_INFINITY;
         } else {
-            slope = ((double)dy)/((double)dx);
+            slope = ((double) dy) / ((double) dx);
         }
         if (slope < 0)
             slope *= -1;
@@ -99,12 +100,10 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
                 s = sidetoside;
             else
                 s = upanddown;
-        }
-        else if (slope <= 0.414214) {
+        } else if (slope <= 0.414214) {
             p = sidetoside;
             s = diagonal;
-        }
-        else {
+        } else {
             p = upanddown;
             s = diagonal;
         }
@@ -127,4 +126,29 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
         }
         return false;
     }
+
+    public static boolean trySpreadMove() throws GameActionException {
+
+        int actionRadius = getType().actionRadiusSquared;
+        RobotInfo[] nearbyRobots = senseNearbyRobots(actionRadius, getTeam());
+
+        double avgX = 0;
+        double avgY = 0;
+        for (RobotInfo robot : nearbyRobots) {
+            if (robot.ID != getID()) {
+                MapLocation loc = robot.getLocation();
+                avgX += loc.x;
+                avgY += loc.y;
+            }
+        }
+        avgX /= nearbyRobots.length;
+        avgY /= nearbyRobots.length;
+
+        MapLocation currLoc = getLocation();
+
+        MapLocation target = new MapLocation(currLoc.x + (int) (avgX - currLoc.x), currLoc.y + (int) (avgY - currLoc.y));
+
+        return tryMoveToward(target);
+    }
 }
+

@@ -50,7 +50,7 @@ public class PoliticianController extends CustomPoliticianController<MessageType
             }
             tryMoveToward(attackLocation);
         } else {
-            tryMoveRandom();
+            trySpreadMove();
         }
     }
 }
