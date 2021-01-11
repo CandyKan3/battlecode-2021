@@ -101,6 +101,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
             if (!lockFlag && robot.type == RobotType.ENLIGHTENMENT_CENTER) {
                 marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
                 lockFlag = true;
+                System.out.println(Clock.getBytecodeNum());
             }
         }
 

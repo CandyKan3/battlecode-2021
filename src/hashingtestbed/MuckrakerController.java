@@ -102,6 +102,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                 continue;
             }
             if (!lockFlag && robot.type == RobotType.ENLIGHTENMENT_CENTER) {
+                int currbytes = Clock.getBytecodeNum();
                 boolean broadcast= false;
                 int currsize = 0;
                 int lochash = (robot.location.x << 16) | robot.location.y;
@@ -120,8 +121,10 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
 
                     marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
                     lockFlag = true;
+                    System.out.println("BYTECODE"+ (Clock.getBytecodeNum()-currbytes));
                 }
                 else{
+                    //System.out.println("BYTECODE"+ Clock.getBytecodeNum());
                     //System.out.println("Already found, ignoring");
                     //we have already found this so we are just gonna be quiet.
                 }
@@ -151,6 +154,6 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                 tryMoveRandom();
             }
         }
-        System.out.println("BYTECODE"+ Clock.getBytecodeNum());
+
     }
 }
