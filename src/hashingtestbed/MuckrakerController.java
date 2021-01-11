@@ -16,6 +16,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
     private final Team enemy;
     private final int actionRadius;
     private Set<EnemyEC> foundEECs = new HashSet<EnemyEC>();
+    int[] bigbrainfoundEECs = new int[11];
     public MuckrakerController(MarsNet<MessageType> marsNet) {
         super(marsNet);
         enemy = getTeam().opponent();
@@ -101,9 +102,22 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                 continue;
             }
             if (!lockFlag && robot.type == RobotType.ENLIGHTENMENT_CENTER) {
-                EnemyEC mothership = new EnemyEC(robot.location.x, robot.location.y);
-                if( foundEECs.add(mothership)){
-                    System.out.println("ADDING "+ robot.location.x +"," + robot.location.y);
+                boolean broadcast= false;
+                int currsize = 0;
+                int lochash = (robot.location.x << 16) | robot.location.y;
+                if(bigbrainfoundEECs[0]==lochash||bigbrainfoundEECs[1]==lochash||bigbrainfoundEECs[2]==lochash||bigbrainfoundEECs[3]==lochash||bigbrainfoundEECs[4]==lochash||bigbrainfoundEECs[5]==lochash||bigbrainfoundEECs[6]==lochash
+                        ||bigbrainfoundEECs[7]==lochash||bigbrainfoundEECs[8]==lochash||bigbrainfoundEECs[9]==lochash||bigbrainfoundEECs[10]==lochash){
+
+                }
+                else{
+                    broadcast=true;
+                    bigbrainfoundEECs[currsize]=lochash;
+                    currsize++;
+                    //need to iterate untill null and add at the next null element
+                }
+              // EnemyEC mothership = new EnemyEC(robot.location.x, robot.location.y);
+                if(broadcast){
+
                     marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
                     lockFlag = true;
                 }
@@ -137,5 +151,6 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                 tryMoveRandom();
             }
         }
+        System.out.println("BYTECODE"+ Clock.getBytecodeNum());
     }
 }
