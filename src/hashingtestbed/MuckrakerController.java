@@ -102,31 +102,23 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                 continue;
             }
             if (!lockFlag && robot.type == RobotType.ENLIGHTENMENT_CENTER) {
-                int currbytes = Clock.getBytecodeNum();
                 boolean broadcast= false;
                 int currsize = 0;
                 int lochash = (robot.location.x << 16) | robot.location.y;
-                if(bigbrainfoundEECs[0]==lochash||bigbrainfoundEECs[1]==lochash||bigbrainfoundEECs[2]==lochash||bigbrainfoundEECs[3]==lochash||bigbrainfoundEECs[4]==lochash||bigbrainfoundEECs[5]==lochash||bigbrainfoundEECs[6]==lochash
-                        ||bigbrainfoundEECs[7]==lochash||bigbrainfoundEECs[8]==lochash||bigbrainfoundEECs[9]==lochash||bigbrainfoundEECs[10]==lochash){
+               // int currcount= Clock.getBytecodeNum();
+                broadcast=isin(lochash, currsize);
+              //  System.out.println(Clock.getBytecodeNum()-currcount);
 
-                }
-                else{
-                    broadcast=true;
-                    bigbrainfoundEECs[currsize]=lochash;
-                    currsize++;
-                    //need to iterate untill null and add at the next null element
-                }
-              // EnemyEC mothership = new EnemyEC(robot.location.x, robot.location.y);
-                if(broadcast){
+
+                if(!broadcast){
 
                     marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
                     lockFlag = true;
-                    System.out.println("BYTECODE"+ (Clock.getBytecodeNum()-currbytes));
+
                 }
                 else{
-                    //System.out.println("BYTECODE"+ Clock.getBytecodeNum());
-                    //System.out.println("Already found, ignoring");
-                    //we have already found this so we are just gonna be quiet.
+                    currsize++;
+                    //System.out.println("BYTECODE"+ (Clock.getBytecodeNum()-currbytes));
                 }
 
 
@@ -156,4 +148,17 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
         }
 
     }
+    public boolean isin(int lochash, int count){
+
+        if(bigbrainfoundEECs[0]==lochash||bigbrainfoundEECs[1]==lochash||bigbrainfoundEECs[2]==lochash||bigbrainfoundEECs[3]==lochash||bigbrainfoundEECs[4]==lochash||bigbrainfoundEECs[5]==lochash||bigbrainfoundEECs[6]==lochash
+                ||bigbrainfoundEECs[7]==lochash||bigbrainfoundEECs[8]==lochash||bigbrainfoundEECs[9]==lochash||bigbrainfoundEECs[10]==lochash){
+            return true;
+        }
+        else{
+            bigbrainfoundEECs[count]=lochash;
+            return false;
+        }
+    }
+
+
 }
