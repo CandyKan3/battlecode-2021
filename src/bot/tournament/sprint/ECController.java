@@ -10,6 +10,8 @@ public class ECController extends CustomECController<MessageType> {
     }
 
     public int turncount = 0;
+    public boolean ramp = false;
+    public int spawncount= 0;
 
     private MapLocation location = getLocation();
     private MapLocation[] potentialEnemyEC = {
@@ -25,6 +27,30 @@ public class ECController extends CustomECController<MessageType> {
 
     @Override
     public void doTurn() throws GameActionException {
+        if(ramp&&getInfluence()>500){
+
+            MapLocation toAttack = enemyEC.peek();
+            if (toAttack == null) {
+                return;
+            }
+            MapLocation curr = this.getLocation();
+            int x = (curr.x + toAttack.x) / 2;
+            int y = (curr.y + toAttack.y) / 2;
+            MapLocation loc = new MapLocation(x, y);
+            //COMMENCE THE ZERG
+           if(spawncount>0){
+               for (Direction dir : Direction.allDirections()) {
+                   if (buildRobotSafe(RobotType.POLITICIAN, dir, 10))
+                       break;
+               }
+               spawncount--;
+               marsNet.broadcastLocation(MessageType.Pre_Zerg, loc);
+           }
+           else{
+               ramp = false;
+               spawncount=50;
+           }
+        }
         int influence = 20 * getRobotCount();
         if (enemyECLocationsSearched < potentialEnemyEC.length) {
             if (getInfluence() >= initialScoutingInfluence) {
@@ -47,6 +73,7 @@ public class ECController extends CustomECController<MessageType> {
             MapLocation loc;
             switch (p.mType) {
                 case FoundEnemyEC:
+                    ramp = true;
                     loc = p.asLocation();
                     neutralEC.add(loc);
                     enemyEC.add(loc);

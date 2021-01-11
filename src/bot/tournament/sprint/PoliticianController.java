@@ -1,12 +1,15 @@
 package bot.tournament.sprint;
 
 import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import communication.MarsNet.MarsNet;
 import controllers.CustomPoliticianController;
 
+
 public class PoliticianController extends CustomPoliticianController<MessageType> {
+    public MapLocation attackCenter = null;
 
     // This cannot be moved into CustomPoliticianController, because it depends
     // on your actual implementation of PoliticianController, which is not
@@ -20,6 +23,7 @@ public class PoliticianController extends CustomPoliticianController<MessageType
 
     @Override
     public void doTurn() throws GameActionException {
+
         for (RobotInfo robot : senseNearbyRobots()) {
             if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
                 if (robot.team == getTeam()) {
@@ -35,6 +39,19 @@ public class PoliticianController extends CustomPoliticianController<MessageType
                 break;
             }
         }
+
+        MapLocation foundLoc = marsNet.getAndHandle(EC.ID, (p) -> {
+            if (p.mType == MessageType.S_Zerg || p.mType== MessageType.Pre_Zerg) {
+                return p.asLocation();
+            }
+            return null;
+        });
+        if (attackCenter == null)
+        {
+            attackCenter = foundLoc;
+        }
+
+
 
         tryMoveToward(EC.location);
     }
