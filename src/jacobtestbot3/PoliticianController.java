@@ -22,11 +22,20 @@ public class PoliticianController extends CustomPoliticianController<MessageType
 
     @Override
     public void doTurn() throws GameActionException {
+        MapLocation me = getLocation();
+        int inRadius = 0;
         for (RobotInfo robot : senseNearbyRobots(RobotType.POLITICIAN.sensorRadiusSquared, getTeam().opponent())) {
             if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
                 marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
                 break;
             }
+            if (me.isWithinDistanceSquared(robot.location, 9)) {
+                inRadius++;
+            }
+        }
+        if (inRadius >= 1 && canEmpower(9)) {
+            empower(9);
+            return;
         }
 
         attackLocation = marsNet.getAndHandleSafe(EC.ID, (p) -> {
@@ -42,7 +51,6 @@ public class PoliticianController extends CustomPoliticianController<MessageType
         });
 
         if (attackLocation != null) {
-            MapLocation me = getLocation();
             if (me.isWithinDistanceSquared(attackLocation, 8) && canEmpower(9)) {
                 empower(9);
                 return;

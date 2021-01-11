@@ -35,9 +35,23 @@ public abstract class DataType implements IGetNumBits {
 
         @Override
         public MapLocation unpack(int loc) {
-            MapLocation ret = MarsNet.rc.getLocation();
-            int x = (loc >> 8) | (ret.x & 0xFFFF00);
-            int y = (loc & 0xFF) | (ret.y & 0xFFFF00);
+            MapLocation me = MarsNet.rc.getLocation();
+            int loc_x_lo = loc >>> 8;
+            int loc_y_lo = loc & 0xFF;
+            int dx = (me.x & 0xFF) - loc_x_lo;
+            int dy = (me.y & 0xFF) - loc_y_lo;
+            if (dx <= -128) {
+                loc_x_lo -= 256;
+            } else if (dx >= 128) {
+                loc_x_lo += 256;
+            }
+            if (dy <= -128) {
+                loc_y_lo -= 256;
+            } else if (dy >= 128) {
+                loc_y_lo += 256;
+            }
+            int x = loc_x_lo + (me.x & 0xFFFF00);
+            int y = loc_y_lo + (me.y & 0xFFFF00);
             return new MapLocation(x,y);
         }
     };
@@ -51,7 +65,15 @@ public abstract class DataType implements IGetNumBits {
 
         @Override
         public Integer unpack(int coord) {
-            return (MarsNet.rc.getLocation().x & 0xFFFF00) | coord;
+            MapLocation me = MarsNet.rc.getLocation();
+            int coord_lo = coord & 0xFF;
+            int d = (me.x & 0xFF) - coord_lo;
+            if (d <= -128) {
+                coord_lo -= 256;
+            } else if (d >= 128) {
+                coord_lo += 256;
+            }
+            return coord_lo + (me.x & 0xFFFF00);
         }
     };
 
@@ -64,7 +86,15 @@ public abstract class DataType implements IGetNumBits {
 
         @Override
         public Integer unpack(int coord) {
-            return (MarsNet.rc.getLocation().y & 0xFFFF00) | coord;
+            MapLocation me = MarsNet.rc.getLocation();
+            int coord_lo = coord & 0xFF;
+            int d = (me.y & 0xFF) - coord_lo;
+            if (d <= -128) {
+                coord_lo -= 256;
+            } else if (d >= 128) {
+                coord_lo += 256;
+            }
+            return coord_lo + (me.y & 0xFFFF00);
         }
     };
 

@@ -18,7 +18,6 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
 
     public CustomECController(MarsNet<E> marsNet) {
         super(marsNet);
-        enemyEC.remove(getLocation());
         friendlyEC.add(ECID);
     }
 
@@ -46,8 +45,7 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
                 buildRobot(robotType, direction, i);
                 return true;
             }
-        } catch (GameActionException ignore) {
-        }
+        } catch (GameActionException ignore) { }
         return false;
     }
 
@@ -59,8 +57,8 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
         for (int i = 0; i < botIDs.size(); i++) {
             int botID = botIDs.get(i);
             if (!canGetFlag(botID)) {
-                botIDs.set(i, botIDs.get(botIDs.size() - 1));
-                botIDs.remove(botIDs.size() - 1);
+                botIDs.set(i, botIDs.get(botIDs.size()-1));
+                botIDs.remove(botIDs.size()-1);
                 i--;
                 continue;
             }
