@@ -8,6 +8,11 @@ public class EnemyEC {
        loc = new MapLocation(x,y);
     }
     @Override
+    public boolean equals(Object obj){
+        return (this.hashCode()==obj.hashCode());
+
+    }
+    @Override
     public int hashCode(){
         int val = this.loc.x;
         val= (val<<5)-val; //Multiply by 31 to reduce collisions

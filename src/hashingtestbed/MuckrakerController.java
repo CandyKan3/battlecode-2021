@@ -103,10 +103,12 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
             if (!lockFlag && robot.type == RobotType.ENLIGHTENMENT_CENTER) {
                 EnemyEC mothership = new EnemyEC(robot.location.x, robot.location.y);
                 if( foundEECs.add(mothership)){
+                    System.out.println("ADDING "+ robot.location.x +"," + robot.location.y);
                     marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
                     lockFlag = true;
                 }
                 else{
+                    //System.out.println("Already found, ignoring");
                     //we have already found this so we are just gonna be quiet.
                 }
 
