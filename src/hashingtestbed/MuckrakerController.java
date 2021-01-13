@@ -17,6 +17,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
     private final int actionRadius;
     private Set<EnemyEC> foundEECs = new HashSet<EnemyEC>();
     int[] bigbrainfoundEECs = new int[11];
+    private int currsize = 0;
     public MuckrakerController(MarsNet<MessageType> marsNet) {
         super(marsNet);
         enemy = getTeam().opponent();
@@ -103,7 +104,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
             }
             if (!lockFlag && robot.type == RobotType.ENLIGHTENMENT_CENTER) {
                 boolean broadcast= false;
-                int currsize = 0;
+
                 int lochash = (robot.location.x << 16) | robot.location.y;
                 int currcount= Clock.getBytecodeNum();
                 broadcast=isin(lochash, currsize);
