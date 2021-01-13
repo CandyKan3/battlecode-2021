@@ -105,9 +105,9 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                 boolean broadcast= false;
                 int currsize = 0;
                 int lochash = (robot.location.x << 16) | robot.location.y;
-               // int currcount= Clock.getBytecodeNum();
+                int currcount= Clock.getBytecodeNum();
                 broadcast=isin(lochash, currsize);
-              //  System.out.println(Clock.getBytecodeNum()-currcount);
+               System.out.println(Clock.getBytecodeNum()-currcount);
 
 
                 if(!broadcast){
@@ -149,7 +149,6 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
 
     }
     public boolean isin(int lochash, int count){
-
         if(bigbrainfoundEECs[0]==lochash||bigbrainfoundEECs[1]==lochash||bigbrainfoundEECs[2]==lochash||bigbrainfoundEECs[3]==lochash||bigbrainfoundEECs[4]==lochash||bigbrainfoundEECs[5]==lochash||bigbrainfoundEECs[6]==lochash
                 ||bigbrainfoundEECs[7]==lochash||bigbrainfoundEECs[8]==lochash||bigbrainfoundEECs[9]==lochash||bigbrainfoundEECs[10]==lochash){
             return true;
