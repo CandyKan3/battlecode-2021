@@ -10,6 +10,7 @@ public class ECController extends CustomECController<MessageType> {
     private int spawnCycle = 0;
     private MessageType[] scoutDirectives = {MessageType.M_ScoutEast, MessageType.M_ScoutWest, MessageType.M_ScoutNorth, MessageType.M_ScoutNorthEast, MessageType.M_ScoutNorthWest, MessageType.M_ScoutSouth, MessageType.M_ScoutSouthEast, MessageType.M_ScoutSouthWest};
     private int currScoutType = 0;
+    private int scoutsBuilt = 0;
     private boolean canBroadcast;
 
     public ECController(MarsNet<MessageType> marsNet) {
@@ -17,10 +18,11 @@ public class ECController extends CustomECController<MessageType> {
     }
 
     private boolean buildMuckrakerScoutSafe(Direction dir, int influence) {
-        if (canBroadcast && buildRobotSafe(RobotType.MUCKRAKER, dir, influence)) {
+        if (scoutsBuilt < scoutDirectives.length && canBroadcast && buildRobotSafe(RobotType.MUCKRAKER, dir, influence)) {
             marsNet.broadcastRaw(scoutDirectives[currScoutType], 0);
             currScoutType = (currScoutType + 1) % scoutDirectives.length;
             canBroadcast = false;
+            scoutsBuilt++;
             return true;
         }
 

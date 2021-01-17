@@ -1,10 +1,15 @@
 package olivertournament2;
 
 import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
 import communication.MarsNet.MarsNet;
 import controllers.CustomPoliticianController;
 
 public class PoliticianController extends CustomPoliticianController<MessageType> {
+
+    private MapLocation attackLocation;
 
     public PoliticianController(MarsNet<MessageType> marsNet) {
         super(marsNet);
@@ -19,6 +24,34 @@ public class PoliticianController extends CustomPoliticianController<MessageType
 
     @Override
     public void doTurn() throws GameActionException {
-        tryMoveRandom();
+        for (RobotInfo robot : senseNearbyRobots(RobotType.POLITICIAN.sensorRadiusSquared, getTeam().opponent())) {
+            if (robot.type == RobotType.ENLIGHTENMENT_CENTER) {
+                marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
+                break;
+            }
+        }
+
+        attackLocation = marsNet.getAndHandleSafe(EC.ID, (p) -> {
+            switch (p.mType) {
+                case A_Zerg:
+                case P_Zerg:
+                    return p.asLocation();
+            }
+            return attackLocation;
+        });
+
+        if (attackLocation != null) {
+            MapLocation me = getLocation();
+            if (me.isWithinDistanceSquared(attackLocation, 8) && canEmpower(9)) {
+                empower(9);
+                return;
+            }
+            tryMoveToward(attackLocation);
+        } else {
+            trySpreadMove();
+        }
+
+
+
     }
 }
