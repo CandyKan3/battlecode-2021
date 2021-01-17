@@ -14,9 +14,6 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
     private final Team enemy;
     private final int actionRadius;
     private HashSet11 foundlocs = new HashSet11();
-    private int broadcastturn =0;
-    private MessageType param1;
-    private MapLocation robotloc;
     public MuckrakerController(MarsNet<MessageType> marsNet) {
         super(marsNet);
         enemy = getTeam().opponent();
@@ -64,12 +61,10 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
 
     @Override
     public void doTurn() throws GameActionException {
-        broadcastturn++;
         boolean exposed = false;
-        if(broadcastturn%4==0){
+        if(((this.getRoundNum() ^ getID()) & 0x3 )== 0){
             //clear cached message for new broadcast
-            robotloc = null;
-            param1 = null;
+
             for (RobotInfo robot : senseNearbyRobots(actionRadius, enemy)) {
                 if (!exposed && robot.type.canBeExposed() && canExpose(robot.location)) {
                     expose(robot.location);
@@ -80,14 +75,10 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                 if (robot.type == RobotType.ENLIGHTENMENT_CENTER && robot.team != getTeam()) {
                     if (robot.team == enemy&&foundlocs.contains(robot.location)==false){
                         foundlocs.add(robot.location);
-                        robotloc = robot.location;
-                        param1 = MessageType.FoundEnemyEC;
                         marsNet.broadcastLocation(MessageType.FoundEnemyEC, robot.location);
                     }
                     else if(foundlocs.contains(robot.location)==false){
                         foundlocs.add(robot.location);
-                        robotloc = robot.location;
-                        param1 = MessageType.FoundNeutralEC;
                         marsNet.broadcastLocation(MessageType.FoundNeutralEC, robot.location);
                     }
                     else{
@@ -96,16 +87,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
                 }
             }
         }
-        if(robotloc==null){
-            for (RobotInfo robot : senseNearbyRobots(actionRadius, enemy)) {
-                if (!exposed && robot.type.canBeExposed() && canExpose(robot.location)) {
-                    expose(robot.location);
-                    exposed = true;
-                }
-            }
-        }
         else{
-            marsNet.broadcastLocation(param1, robotloc);
             for (RobotInfo robot : senseNearbyRobots(actionRadius, enemy)) {
                 if (!exposed && robot.type.canBeExposed() && canExpose(robot.location)) {
                     expose(robot.location);
