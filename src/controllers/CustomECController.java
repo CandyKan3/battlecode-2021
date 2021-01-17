@@ -10,9 +10,11 @@ import java.util.PriorityQueue;
 
 // Contains useful functions and data for all ECs
 public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataType> extends CustomRobotController<E> {
+    public final int x = getLocation().x;
+    public final int y = getLocation().y;
     public final PriorityQueue<Integer> friendlyEC = new PriorityQueue<>();
-    public final PriorityQueue<MapLocation> enemyEC = new PriorityQueue<>();
-    public final PriorityQueue<MapLocation> neutralEC = new PriorityQueue<>();
+    public final PriorityQueue<MapLocation> enemyEC = new PriorityQueue<>(12, (a, b) -> (int) Math.round((getDistanceTo(a) - getDistanceTo(b))));
+    public final PriorityQueue<MapLocation> neutralEC = new PriorityQueue<>(12, (a, b) -> (int) Math.round((getDistanceTo(a) - getDistanceTo(b))));
     public final ArrayList<Integer> botIDs = new ArrayList<>();
     public final int ECID = getID();
 
@@ -45,7 +47,8 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
                 buildRobot(robotType, direction, i);
                 return true;
             }
-        } catch (GameActionException ignore) { }
+        } catch (GameActionException ignore) {
+        }
         return false;
     }
 
@@ -57,12 +60,17 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
         for (int i = 0; i < botIDs.size(); i++) {
             int botID = botIDs.get(i);
             if (!canGetFlag(botID)) {
-                botIDs.set(i, botIDs.get(botIDs.size()-1));
-                botIDs.remove(botIDs.size()-1);
+                botIDs.set(i, botIDs.get(botIDs.size() - 1));
+                botIDs.remove(botIDs.size() - 1);
                 i--;
                 continue;
             }
             marsNet.getAndHandleSafe(botID, ph);
         }
     }
+
+    private double getDistanceTo(MapLocation ml) {
+        return Math.sqrt((ml.x - x) * (ml.x - x) + (ml.y - y) * (ml.y - y));
+    }
 }
+
