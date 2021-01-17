@@ -3,9 +3,12 @@ package controllers;
 import battlecode.common.*;
 import communication.MarsNet.IGetDataType;
 import communication.MarsNet.MarsNet;
+import communication.MarsNet.Packet;
 import communication.MarsNet.PacketHandler;
+import util.CircQueue;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.PriorityQueue;
 
 // Contains useful functions and data for all ECs
@@ -13,7 +16,6 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
     public final PriorityQueue<Integer> friendlyEC = new PriorityQueue<>();
     public final PriorityQueue<MapLocation> enemyEC = new PriorityQueue<>(12, Comparator.comparingInt(a -> a.distanceSquaredTo(getLocation())));
     public final PriorityQueue<MapLocation> neutralEC = new PriorityQueue<>(12, Comparator.comparingInt(a -> a.distanceSquaredTo(getLocation())));
-    public final ArrayList<Integer> botIDs = new ArrayList<>();
     public final ArrayList<Integer>[] botIDs = new ArrayList[4];
     public final int ECID = getID();
     private int getLastBotID=0;
@@ -89,7 +91,6 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
         }
         return false;
     }
-}
 
     public void queueMessage(Packet<E> p) {
         messageQueue.push(p);
