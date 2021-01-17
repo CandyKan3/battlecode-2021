@@ -11,6 +11,10 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
 
     public final RobotInfo EC;
     private static Random r = new Random(getID());
+    private final static Direction[] directions = {Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST};
+    private final static double invr2 = 1 / Math.sqrt(2);
+    private final static double[] negDeltaXs = {0, -invr2, -1, -invr2, 0, invr2, 1, invr2};
+    private final static double[] negDeltaYs = {-1, -invr2, 0, invr2, 1, invr2, 0, -invr2};
 
     public CustomUnitController(MarsNet<E> marsNet) {
         super(marsNet);
@@ -41,7 +45,6 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
     }
 
     public static boolean tryMoveRandom() throws GameActionException {
-        Direction[] directions = Direction.allDirections();
         for (int i = directions.length - 1; i > 0; i--) {
             int index = (int) (r.nextDouble() * i);
             Direction temp = directions[index];
@@ -61,67 +64,35 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
         MapLocation from = getLocation();
         int dx = to.x - from.x;
         int dy = to.y - from.y;
-        Direction sidetoside = Direction.EAST;
-        if (dx < 0) {
-            sidetoside = Direction.WEST;
-        }
-        Direction upanddown = Direction.NORTH;
-        if (dy < 0) {
-            upanddown = Direction.SOUTH;
-        }
-        boolean isNorth = upanddown == Direction.NORTH;
-        Direction diagonal;
-        if (sidetoside == Direction.EAST) {
-            if (isNorth) {
-                diagonal = Direction.NORTHEAST;
-            } else {
-                diagonal = Direction.SOUTHEAST;
-            }
+        Direction bestDirection = from.directionTo(to);
+        Direction left = bestDirection.rotateLeft();
+        int leftIdx = left.ordinal();
+        double leftCor = dx * negDeltaXs[leftIdx] + dy * negDeltaYs[leftIdx];
+        Direction right = bestDirection.rotateRight();
+        int rightIdx = right.ordinal();
+        double rightCor = dx * negDeltaXs[rightIdx] + dy * negDeltaYs[rightIdx];
+        Direction nextBestDirection;
+        boolean rotateLeft;
+        if (rightCor < leftCor) {
+            rotateLeft = true;
+            nextBestDirection = right;
         } else {
-            if (isNorth) {
-                diagonal = Direction.NORTHWEST;
-            } else {
-                diagonal = Direction.SOUTHWEST;
-            }
+            rotateLeft = false;
+            nextBestDirection = left;
         }
-        double slope;
-        if (dx == 0) {
-            slope = Double.POSITIVE_INFINITY;
-        } else {
-            slope = ((double) dy) / ((double) dx);
-        }
-        if (slope < 0)
-            slope *= -1;
-        Direction p, s;
-        if (slope > 0.414214 && slope < 2.414214) {
-            p = diagonal;
-            if (slope <= 1)
-                s = sidetoside;
-            else
-                s = upanddown;
-        } else if (slope <= 0.414214) {
-            p = sidetoside;
-            s = diagonal;
-        } else {
-            p = upanddown;
-            s = diagonal;
-        }
-        boolean pRotateLeft = true;
-        if (p.rotateLeft().equals(s))
-            pRotateLeft = false;
+        Direction temp;
         for (int i = 0; i < 5; i++) {
-            if (canMove(p)) {
-                move(p);
+            if (canMove(bestDirection)) {
+                move(bestDirection);
                 return true;
             }
-            Direction temp;
-            if (pRotateLeft)
-                temp = p.rotateLeft();
+            if (rotateLeft)
+                temp = bestDirection.rotateLeft();
             else
-                temp = p.rotateRight();
-            p = s;
-            s = temp;
-            pRotateLeft = !pRotateLeft;
+                temp = bestDirection.rotateRight();
+            bestDirection = nextBestDirection;
+            nextBestDirection = temp;
+            rotateLeft = !rotateLeft;
         }
         return false;
     }

@@ -27,4 +27,11 @@ public class ArraySet11 {
             }
         }
     }
+
+    public MapLocation getOne() {
+        if (size == 0)
+            return null;
+        int loc = locations[0];
+        return new MapLocation(loc >>> 16, loc & 0xFFFF);
+    }
 }

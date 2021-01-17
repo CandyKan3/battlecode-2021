@@ -69,6 +69,8 @@ public strictfp class MarsNet<E extends Enum<E> & IGetDataType> {
 
     private Packet<E> getPacket(int botID) throws GameActionException {
         int flag = rc.getFlag(botID);
+        if (flag == 0)
+            return null;
         E mType = hp.getType(flag);
         return new Packet<>(mType, flag & hp.getDataMask(mType));
     }
