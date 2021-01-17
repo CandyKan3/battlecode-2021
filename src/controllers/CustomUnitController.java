@@ -4,6 +4,7 @@ import battlecode.common.*;
 import communication.MarsNet.IGetDataType;
 import communication.MarsNet.MarsNet;
 
+import javax.swing.*;
 import java.util.Random;
 
 // Contains useful functions and data for non-EC bots
@@ -95,6 +96,67 @@ public strictfp abstract class CustomUnitController<E extends Enum<E> & IGetData
             rotateLeft = !rotateLeft;
         }
         return false;
+    }
+
+    public void circleEC() {
+        if (r.nextDouble() < 0.1) {
+            try {
+                tryMoveRandom();
+            } catch (GameActionException ignore) { }
+            return;
+        }
+        MapLocation me = getLocation();
+        double dx = EC.location.x - me.x;
+        double dy = EC.location.y - me.y;
+        int i_dx = (int) -Math.round(dx);
+        int i_dy = (int) -Math.round(dy);
+        MapLocation antiEC = me.translate(i_dx, i_dy);
+        MapLocation leftEC = me.translate(-i_dy, i_dx);
+        MapLocation rightEC = me.translate(i_dy, -i_dx);
+        // If too close to the EC, try moving directly away from the EC. Could be replaced with something more useful...
+        if (Math.max(Math.abs(dx), Math.abs(dy)) <= 2) {
+            try {
+                tryMoveToward(antiEC);
+            } catch (GameActionException ignore) { }
+            return;
+        }
+        double invhyp = 1.0 / Math.hypot(dx, dy);
+        dx *= invhyp;
+        dy *= invhyp;
+        double b_dx, b_dy, dot;
+        int behindCount = 0;
+        int frontCount = 0;
+        int sideCount = 0;
+        // always sense 20 out so
+        for (RobotInfo bot : senseNearbyRobots(20, getTeam())) {
+            b_dx = bot.location.x - me.x;
+            b_dy = bot.location.y - me.y;
+            // The dot product of the vector from the unit to the other bot and the vector from the unit to the EC
+            // The larger dot is, the more towards the EC the unit is, the smaller (negative) it is, the farther away
+            // 0 (and close to 0) means that the unit is roughly "sideways"
+            dot = b_dx * dx + b_dy * dy;
+            // The thresholds here are pretty much arbitrary, play around and see what value works best
+            if (dot > 2)
+                behindCount++;
+            else if (dot < -2)
+                frontCount++;
+            else
+                sideCount++;
+        }
+        // here is where the most freedom exists, and how the behavior is largely controlled. Finding good logic
+        // here means the difference between something awful and something awesome.
+        try {
+            if (behindCount < frontCount - sideCount + 2)
+                tryMoveToward(EC.location);
+            else if (frontCount < behindCount - sideCount)
+                tryMoveToward(antiEC);
+            else {
+                if (r.nextFloat() < 0.5)
+                    tryMoveToward(leftEC);
+                else
+                    tryMoveToward(rightEC);
+            }
+        } catch (GameActionException ignore) { }
     }
 
     public static boolean trySpreadMove() throws GameActionException {
