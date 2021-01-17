@@ -1,12 +1,15 @@
 package olivertournament2;
 
 import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
 import battlecode.common.RobotType;
 import communication.MarsNet.MarsNet;
 import controllers.CustomRobotController;
 import controllers.CustomSlandererController;
 
 public class SlandererController extends CustomSlandererController<MessageType> {
+
+    MapLocation movementGoal;
 
     public SlandererController(MarsNet<MessageType> marsNet) {
         super(marsNet);
@@ -28,6 +31,19 @@ public class SlandererController extends CustomSlandererController<MessageType> 
     public void doTurn() throws GameActionException {
         transform(); // Leave this here
 
-        tryMoveRandom();
+        movementGoal = marsNet.getAndHandleSafe(EC.ID, (p) -> {
+            switch (p.mType) {
+                case S_Turtle:
+                    return p.asLocation();
+            }
+            return movementGoal;
+        });
+
+        if (movementGoal != null) {
+            tryMoveToward(movementGoal);
+        } else {
+
+            tryMoveRandom();
+        }
     }
 }

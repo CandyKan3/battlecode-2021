@@ -77,7 +77,19 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
             }
         }
 
+        if (scouting) {
+            int dx = 5 * scoutDirection.getDeltaX();
+            int dy = 5 * scoutDirection.getDeltaY();
+            MapLocation peekLocation = getLocation().translate(dx, dy);
 
+            // Edge of map is found
+            if (!onTheMap(peekLocation)) {
+                scouting = false;
+            }
+        }
+
+
+        // Movement
         if (scouting && scoutLocation != null)
             tryMoveToward(scoutLocation);
         else
