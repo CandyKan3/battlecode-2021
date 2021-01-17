@@ -59,6 +59,8 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
     public void handleBots(PacketHandler<?, E> ph) {
         for (int i = 0; i < botIDs.size(); i++) {
             int botID = botIDs.get(i);
+            //switching bot groups if something breaks comment this out :)
+            if(((this.getRoundNum() ^ botID) & 0x3 )== 0){
             if (!canGetFlag(botID)) {
                 botIDs.set(i, botIDs.get(botIDs.size() - 1));
                 botIDs.remove(botIDs.size() - 1);
@@ -66,6 +68,7 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
                 continue;
             }
             marsNet.getAndHandleSafe(botID, ph);
+        }
         }
     }
 

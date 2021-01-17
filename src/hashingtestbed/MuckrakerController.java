@@ -3,6 +3,7 @@ package hashingtestbed;
 import battlecode.common.*;
 import communication.MarsNet.MarsNet;
 import controllers.CustomMuckrakerController;
+import util.ArraySet11;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +18,7 @@ public class MuckrakerController extends CustomMuckrakerController<MessageType> 
     private final int actionRadius;
     private Set<EnemyEC> foundEECs = new HashSet<EnemyEC>();
     int[] bigbrainfoundEECs = new int[11];
+    private ArraySet11 testing = new ArraySet11();
     private int currsize = 0;
     public MuckrakerController(MarsNet<MessageType> marsNet) {
         super(marsNet);
