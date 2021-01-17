@@ -9,13 +9,18 @@ import util.HashSet11;
 import util.CircQueue;
 
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.PriorityQueue;
 
 // Contains useful functions and data for all ECs
 public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataType> extends CustomRobotController<E> {
-    public final HashSet11 friendlyLocations = new HashSet11();
-    public final HashSet11 enemyLocations = new HashSet11();
-    public final ArrayList<Integer> botIDs = new ArrayList<>();
+    public final int x = getLocation().x;
+    public final int y = getLocation().y;
+    public final PriorityQueue<Integer> friendlyEC = new PriorityQueue<>();
+    public final PriorityQueue<MapLocation> enemyEC = new PriorityQueue<>(12, (a, b) -> (int) Math.round((getDistanceTo(a) - getDistanceTo(b))));
+    public final PriorityQueue<MapLocation> neutralEC = new PriorityQueue<>(12, (a, b) -> (int) Math.round((getDistanceTo(a) - getDistanceTo(b))));
+    public final ArrayList<Integer>[] botIDs = new ArrayList[4];
+    public final int ECID = getID();
+    private int getLastBotID=0;
 
     private final CircQueue<Packet<E>> messageQueue = new CircQueue<>(10);
     private Packet<E> currMessage;
@@ -25,6 +30,11 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
 
     public CustomECController(MarsNet<E> marsNet) {
         super(marsNet);
+        botIDs[0]= new ArrayList<>();
+        botIDs[1] = new ArrayList<>();
+        botIDs[2] = new ArrayList<>();
+        botIDs[3] = new ArrayList<>();
+        friendlyEC.add(ECID);
     }
 
     @Override
@@ -32,7 +42,8 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
         super.buildRobot(robotType, direction, i);
         MapLocation botloc = adjacentLocation(direction);
         RobotInfo ri = senseRobotAtLocation(botloc);
-        botIDs.add(ri.ID);
+        botIDs[ri.ID & 0x3].add(ri.ID);
+        getLastBotID=ri.ID;
     }
 
     public boolean buildRobotSafe(RobotType robotType, Direction direction, int i) {
@@ -46,22 +57,21 @@ public strictfp abstract class CustomECController<E extends Enum<E> & IGetDataTy
     }
 
     public int getLastBuiltID() {
-        return botIDs.get(botIDs.size() - 1);
+        return getLastBotID;
     }
 
     public void handleBots(PacketHandler<?, E> ph) {
-        try {
-            for (int i = 0; i < botIDs.size(); i++) {
-                int botID = botIDs.get(i);
-                if (!canGetFlag(botID)) {
-                    botIDs.set(i, botIDs.get(botIDs.size() - 1));
-                    botIDs.remove(botIDs.size() - 1);
-                    i--;
-                    continue;
-                }
-                marsNet.getAndHandleF(botID, Objects::nonNull, ph);
+        ArrayList<Integer> turnIDs = botIDs[getRoundNum() & 0x3];
+        for (int i = 0; i < turnIDs.size(); i++) {
+            int botID = turnIDs.get(i);
+            if (!canGetFlag(botID)) {
+                turnIDs.set(i, turnIDs.get(turnIDs.size() - 1));
+                turnIDs.remove(turnIDs.size() - 1);
+                i--;
+                continue;
             }
-        } catch (GameActionException ignore) { } // Exception will never be thrown.
+            marsNet.getAndHandleSafe(botID, ph);
+        }
     }
 
     public void messageInit() {
